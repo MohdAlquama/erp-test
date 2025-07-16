@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->text('address')->nullable();
             $table->string('role')->nullable();
             $table->json('permissions')->nullable();
+            $table->string('status')->nullable();
             $table->timestamps();
         });
     }
