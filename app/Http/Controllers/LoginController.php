@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin;
 use App\Models\SubAdmin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -9,6 +10,65 @@ use Inertia\Inertia;
 
 class LoginController extends Controller
 {
+
+public  function collageLogin(Request $request){
+     $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
+
+    $subadmin = Admin::where('email', $credentials['email'])->first();
+
+    if (!$subadmin) {
+        return back()->withErrors(['email' => 'User not found.']);
+    }
+
+    if (!Hash::check($credentials['password'], $subadmin->password)) {
+        return back()->withErrors(['email' => 'Invalid password.']);
+    }
+
+    if ($subadmin->status !== 'active') {
+        return back()->withErrors(['email' => 'Account is inactive. Contact administrator.']);
+    }
+
+    $roles = array_map('strtolower', explode(',', $subadmin->role ?? ''));
+    // $permissions = array_filter(explode('.', trim($subadmin->permissions ?? '')));
+
+    $subadminSession = [
+        'id' => $subadmin->id,
+        'name' => $subadmin->name,
+        'email' => $subadmin->email,
+        'roles' => $roles,
+        'phone' => $subadmin->phone,
+        'address' => $subadmin->address,
+        'permissions' => $subadmin->permissions,
+        'status' => $subadmin->status,
+        'created_at' => $subadmin->created_at->toDateString(),
+    ];
+
+    $request->session()->put('admin', $subadminSession);
+
+    return response()->json([
+        'message' => 'Login successful',
+        'user' => $subadminSession,
+        'detail' => $subadmin->makeHidden(['password']),
+    ]);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function show()
     {
         return Inertia::render('Auth/Login');
@@ -104,6 +164,9 @@ class LoginController extends Controller
 
 
 
+
+
+
     
 }
 
@@ -190,6 +253,41 @@ class LoginController extends Controller
 // }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

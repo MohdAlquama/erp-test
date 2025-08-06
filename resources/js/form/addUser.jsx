@@ -2002,35 +2002,42 @@ export default function AddUser({ onSubmit, permissionsData, initialData = null 
             </div>
 
             {/* Permissions */}
-            {formData.role && (
-                <div className="mt-4">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Assign Permissions for <span className="capitalize">{formData.role}</span>:
-                    </h3>
-                    {permissionsData
-                        .filter((group) => group.feature === formData.role)
-                        .map((group) => (
-                            <div key={group.feature} className="mb-3">
-                                <div className="grid grid-cols-2 gap-2">
-                                    {group.permissions.map((perm) => (
-                                        <label
-                                            key={perm}
-                                            className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                value={perm}
-                                                checked={selectedPermissions.includes(perm)}
-                                                onChange={() => handlePermissionToggle(perm)}
-                                            />
-                                            {perm}
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                </div>
-            )}
+           {formData.role && (
+  <div className="mt-4">
+    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      Assign Permissions for <span className="capitalize">{formData.role}</span>:
+    </h3>
+    {permissionsData
+      .filter((group) => group.feature === formData.role)
+      .map((group) => (
+        <div key={group.feature} className="mb-3 max-h-64 overflow-y-auto pr-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {group.permissions.map((perm) => (
+              <label
+                key={perm}
+                className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-200 break-all"
+              >
+                <input
+                  type="checkbox"
+                  value={perm}
+                  checked={selectedPermissions.includes(perm)}
+                  onChange={() => handlePermissionToggle(perm)}
+                  className="mt-1"
+                />
+                <span
+                  className="break-all "
+                  title={perm}
+                >
+                  {perm}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      ))}
+  </div>
+)}
+
 
             {/* Address */}
             <div>

@@ -9,7 +9,7 @@ export default function SubAdminDashboard() {
       <p>This is where Sub Admin manages their tasks.</p>
 
       <div className="mt-4">
-        {permissions.includes('sale') ? (
+        {permissions.includes('dashboardView') ? (
           <h2 className="text-xl font-semibold">Welcome, {subadmin?.name}!</h2>
         ) : (
           <p className="text-red-600 font-medium">
