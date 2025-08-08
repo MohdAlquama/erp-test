@@ -1,12 +1,20 @@
 import React from 'react';
 import { Home, Users, Settings, LogOut, X } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { useBaseContext } from '@/contexts/adminContext';
+import { useBaseContext } from '@/contexts/adminContext'; // Make sure this matches your path
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const { permissions } = useBaseContext();
+  const { admin, permissions, loading } = useBaseContext();
 
-  // Define menu items with optional permissions
+  // ✅ Prevent sidebar rendering until permissions are loaded
+  if (loading) {
+    return (
+      <aside className="w-64 bg-gray-900 text-white p-6">
+        <p>Loading menu...</p>
+      </aside>
+    );
+  }
+
   const menuItems = [
     {
       label: 'Dashboard',
@@ -16,10 +24,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     },
     {
       label: 'Users',
-      href: '/admin/users',
+      href: '/admin/subjects',
       icon: Users,
       color: 'green',
-      permission: 'UserManagementShow',
     },
     {
       label: 'Batch',
@@ -32,7 +39,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Mobile overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -73,7 +80,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         {/* Navigation */}
         <nav className="px-4 py-6 space-y-2">
           {menuItems.map(({ label, href, icon, color, permission }) =>
-            !permission || permissions?.includes(permission) ? (
+            !permission || permissions.includes(permission) ? (
               <SidebarLink
                 key={href}
                 href={href}
@@ -100,6 +107,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   );
 };
 
+// Sidebar Link Component
 const SidebarLink = ({ href, icon: Icon, label, color }) => {
   return (
     <Link

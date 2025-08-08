@@ -1,7 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\BatchesController;
+use App\Http\Controllers\Admin\HelperController;
+use App\Http\Controllers\Admin\TeacherController;
+
 use App\Models\Admin;
+use App\Models\Teachers;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Super\AddSubAdminController;
 use App\Http\Controllers\Super\PermissionController;
@@ -132,19 +136,79 @@ Route::prefix('admin')->middleware(['newrole:CollegeAdmin'])->group(function () 
     Route::post('/batches', [BatchesController::class, 'store']);
     Route::put('/batches/{id}', [BatchesController::class, 'update']);
     Route::delete('/batches/{id}', [BatchesController::class, 'destroy']);
-    Route::get('/teachers',function(){
-return Inertia::render('admin/SubjectAssign');
+//     Route::get('/teachers',function(){
+// return Inertia::render('admin/SubjectAssign');
 
-    });
-
- Route::prefix('admin')->group(function () {
-    
-});
+//     });
 
 
-    Route::post('/t', [TeacherController::class, 'index'])->name('admin.teachers.index');
+
+
+    Route::get('/TeacherDrawer', function(){
+        return Inertia::render('admin/TeacherDrawer');
+    })->name('admin.teachers.index');
+ 
+ Route::post('{id}/teachers', function (Request $request, $adminId) {
+    $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'nullable|email',
+        'password' => 'required|string|',
+        'status' => 'required|in:Active,Inactive',
+        'batch_ids' => 'nullable|array',
+        'subject_ids' => 'nullable|array',
+
+    ]);
+        $data['admin_id'] = $adminId;
+            $data['role'] = 'Teacher'; // 👈 Assign role here
+
     
+    $teacher = Teachers::create($data);
+
+    return response()->json([
+        'message' => 'Teacher added successfully',
+        'teacher' => $teacher
+    ], 201);
+})->name('admin.teachers.store');
+Route::get('{id}/teachers', function ($adminId) {
+    $teachers = Teachers::where('admin_id', $adminId)->get();
+
+    return response()->json([
+        'teachers' => $teachers
+    ]);
+})->name('admin.teachers.index');
+
+Route::put('{id}/teachers/{teacherId}', function (Request $request, $adminId, $teacherId) {
+    $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'nullable|email',
+        'status' => 'required|in:Active,Inactive',
+        'batch_ids' => 'nullable|array',
+        'subject_ids' => 'nullable|array',
+    ]);
+
+    $teacher = Teachers::where('admin_id', $adminId)->findOrFail($teacherId);
+    $teacher->update($data);
+
+    return response()->json([
+        'message' => 'Teacher updated successfully',
+        'teacher' => $teacher
+    ]);
+})->name('admin.teachers.update');
+
+Route::delete('{id}/teachers/{teacherId}', function ($adminId, $teacherId) {
+    $teacher = Teachers::where('admin_id', $adminId)->findOrFail($teacherId);
+    $teacher->delete();
+
+    return response()->json([
+        'message' => 'Teacher deleted successfully'
+    ]);
+})->name('admin.teachers.destroy');
+
+
+Route::get('/teachers/{id}/count', [HelperController::class, 'index'])->name('admin.helper.index');
     
-    
+
+
+
 });
 
