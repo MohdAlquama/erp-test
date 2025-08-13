@@ -61,4 +61,23 @@ class BatchesController extends Controller
 
         return response()->json(['message' => 'Deleted']);
     }
+
+public function show($id)
+{
+    $batch = Batch::findOrFail($id);
+    return inertia('admin/BatchView', [
+        'batch' => $batch
+    ]);
+}
+
+  public function AdminGetBatch($adminId)
+    {
+        // Example: Fetch only batches created by this admin
+        $batches = Batch::where('created_by', $adminId)->get();
+
+        return response()->json([
+            'batches' => $batches
+        ]);
+    }
+
 }

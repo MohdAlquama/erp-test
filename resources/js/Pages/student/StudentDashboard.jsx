@@ -1,218 +1,96 @@
-"use client";
-
 import StudentLayout from "@/Layouts/StudentLayout";
-import {
-    CalendarCheck,
-    BookOpen,
-    GraduationCap,
-    Bell,
-    User,
-} from "lucide-react";
-
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    BarChart,
-    Bar,
-    PieChart,
-    Pie,
-    Cell,
-    Legend,
-} from "recharts";
+import { useStudent } from "@/contexts/StudentContext";
+import { User, Phone, Mail, MapPin } from "lucide-react";
+import AttendanceCharts from "./AttendanceCharts";
 
 export default function StudentDashboard() {
-    const stats = [
-        {
-            title: "Attendance",
-            icon: (
-                <CalendarCheck className="h-8 w-8 text-indigo-500 dark:text-indigo-400" />
-            ),
-            description: "See your school attendance",
-            href: "/student/attendance",
-        },
-        {
-            title: "Subjects",
-            icon: (
-                <BookOpen className="h-8 w-8 text-indigo-500 dark:text-indigo-400" />
-            ),
-            description: "Look at your subjects",
-            href: "/student/subjects",
-        },
-        {
-            title: "Report Card",
-            icon: (
-                <GraduationCap className="h-8 w-8 text-indigo-500 dark:text-indigo-400" />
-            ),
-            description: "Check your marks and progress",
-            href: "/student/report-card",
-        },
-        {
-            title: "Notices",
-            icon: (
-                <Bell className="h-8 w-8 text-indigo-500 dark:text-indigo-400" />
-            ),
-            description: "School announcements & alerts",
-            href: "/student/notices",
-        },
-        {
-            title: "My Profile",
-            icon: (
-                <User className="h-8 w-8 text-indigo-500 dark:text-indigo-400" />
-            ),
-            description: "Update your info",
-            href: "/student/profile",
-        },
-    ];
+  const { student, loading } = useStudent();
 
-    const attendanceData = [
-        { date: "Mon", attendance: 100 },
-        { date: "Tue", attendance: 95 },
-        { date: "Wed", attendance: 90 },
-        { date: "Thu", attendance: 100 },
-        { date: "Fri", attendance: 85 },
-    ];
-
-    const gradeData = [
-        { subject: "Math", marks: 90 },
-        { subject: "Science", marks: 85 },
-        { subject: "English", marks: 75 },
-        { subject: "Art", marks: 95 },
-    ];
-
-    const subjectProgress = [
-        { name: "Completed", value: 6 },
-        { name: "Ongoing", value: 3 },
-        { name: "Not Started", value: 1 },
-    ];
-
-    const COLORS = ["#4f46e5", "#22c55e", "#0ea5e9"];
-
+  if (loading) {
     return (
-        <StudentLayout>
-            <div className="pt-6">
-                {/* Student Info Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    {stats.map((item, idx) => (
-                        <a
-                            key={idx}
-                            href={item.href}
-                            className="p-6 rounded-2xl shadow-lg backdrop-blur-lg bg-white/30 dark:bg-white/10 hover:shadow-xl transition-all duration-300 flex items-center gap-4 group"
-                        >
-                            <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full">
-                                {item.icon}
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-semibold group-hover:text-indigo-600 dark:group-hover:text-indigo-300">
-                                    {item.title}
-                                </h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">
-                                    {item.description}
-                                </p>
-                            </div>
-                        </a>
-                    ))}
-                </div>
-
-                {/* Charts Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Attendance Line Chart */}
-                    <div className="p-6 rounded-2xl backdrop-blur-lg bg-white/30 dark:bg-white/10 shadow-lg">
-                        <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
-                            Attendance This Week
-                        </h3>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <LineChart data={attendanceData}>
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    stroke="#ccc"
-                                />
-                                <XAxis dataKey="date" stroke="#8884d8" />
-                                <YAxis domain={[0, 100]} stroke="#8884d8" />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: "#1f2937",
-                                        border: "none",
-                                    }}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="attendance"
-                                    stroke="#60a5fa"
-                                    strokeWidth={3}
-                                    dot={{ r: 5 }}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    {/* Marks Bar Chart */}
-                    <div className="p-6 rounded-2xl backdrop-blur-lg bg-white/30 dark:bg-white/10 shadow-lg">
-                        <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
-                            Marks by Subject
-                        </h3>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={gradeData}>
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    stroke="#ccc"
-                                />
-                                <XAxis dataKey="subject" stroke="#8884d8" />
-                                <YAxis domain={[0, 100]} stroke="#8884d8" />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: "#1f2937",
-                                        border: "none",
-                                    }}
-                                />
-                                <Bar dataKey="marks" fill="#22d3ee" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    {/* Subject Progress Pie Chart */}
-                    <div className="p-6 rounded-2xl backdrop-blur-lg bg-white/30 dark:bg-white/10 shadow-lg col-span-1 md:col-span-2">
-                        <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
-                            Subject Progress
-                        </h3>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <PieChart>
-                                <Pie
-                                    data={subjectProgress}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={false}
-                                    label={({ name, percent }) =>
-                                        `${name} (${(percent * 100).toFixed(
-                                            0
-                                        )}%)`
-                                    }
-                                    outerRadius={80}
-                                    dataKey="value"
-                                >
-                                    {subjectProgress.map((entry, index) => (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={COLORS[index % COLORS.length]}
-                                        />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: "#1f2937",
-                                        border: "none",
-                                    }}
-                                />
-                                <Legend />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            </div>
-        </StudentLayout>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="text-lg font-medium text-gray-600">Loading student info...</div>
+      </div>
     );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header Section */}
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-6 sm:p-8 border border-white/20">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Student Dashboard
+              </h1>
+              <p className="text-gray-600 mt-2 text-sm sm:text-base">
+                Track your academic progress and stay updated
+              </p>
+            </div>
+          </div>
+
+          {/* Student Profile Section */}
+          <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-center">
+            <div className="relative">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-3xl font-bold text-white shadow-md">
+                {student?.name?.charAt(0)?.toUpperCase() || "S"}
+              </div>
+              <div className="absolute -bottom-2 -right-2 w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="w-3 h-3 bg-white rounded-full"></div>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
+                {student?.name || "No Name Provided"}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 text-gray-600">
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <User size={18} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Student ID</p>
+                    <p className="font-medium text-sm sm:text-base">{student?.enrollment_number || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                    <Phone size={18} className="text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Phone</p>
+                    <p className="font-medium text-sm sm:text-base">{student?.contact_number || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <Mail size={18} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Email</p>
+                    <p className="font-medium text-sm sm:text-base">{student?.email || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                    <MapPin size={18} className="text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Address</p>
+                    <p className="font-medium text-sm sm:text-base">{student?.address || "Not Provided"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Attendance Charts */}
+        <AttendanceCharts student_id={student?.id} admin_id={student?.admin_id} />
+      </div>
+    </div>
+  );
 }
+
+StudentDashboard.layout = (page) => <StudentLayout>{page}</StudentLayout>;

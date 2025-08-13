@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import AdminLayout from "../../Layouts/AdminLayout";
-import { Pencil, Trash, Plus } from "lucide-react";
+import { Pencil, Trash, Plus, ViewIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { useBaseContext } from "@/contexts/adminContext";
 import axiosInstance from "@/utils/axiosInstance";
 import Loader from "@/components/Loader";
-
+import { router } from '@inertiajs/react';
 export default function Batches() {
     const { permissions, admin } = useBaseContext();
     const [batches, setBatches] = useState([]);
@@ -87,6 +87,10 @@ export default function Batches() {
             }
         }
     };
+const handleView = (id) => {
+    router.get(`/admin/batches/${id}`);
+};
+
 
     const filteredBatches = batches.filter((b) =>
         b.name.toLowerCase().includes(search.toLowerCase())
@@ -139,6 +143,14 @@ export default function Batches() {
                                         <td className="px-4 py-2">{batch.grade}</td>
                                         <td className="px-4 py-2">{batch.section}</td>
                                         <td className="px-4 py-2 flex gap-2">
+
+                                               <button
+                                                    onClick={() => handleView(batch.id)}
+                                                    className="text-yellow-600 hover:underline"
+                                                >
+                                                    <ViewIcon className="w-4 h-4 inline" /> view
+                                                </button>
+
                                             {can("StudentManagementBatchEdit") && (
                                                 <button
                                                     onClick={() => handleEdit(batch)}
@@ -155,6 +167,7 @@ export default function Batches() {
                                                     <Trash className="w-4 h-4 inline" /> Delete
                                                 </button>
                                             )}
+                                          
                                         </td>
                                     </tr>
                                 ))
@@ -223,13 +236,14 @@ export default function Batches() {
                             className="w-full px-4 py-2 border rounded dark:bg-gray-800 dark:text-white"
                         />
                     </div>
-
+                     
                     <button
                         type="submit"
                         className="bg-indigo-600 text-white w-full py-2 rounded hover:bg-indigo-700"
                     >
                         {editId !== null ? "Update Batch" : "Create Batch"}
                     </button>
+                  
                 </form>
             </div>
         </div>

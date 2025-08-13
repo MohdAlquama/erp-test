@@ -1,20 +1,36 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminCardController;
+use App\Http\Controllers\Admin\Admit\AdmitCardFolderController;
+use App\Http\Controllers\Admin\Admit\BatchFolderController;
+use App\Http\Controllers\Admin\AdmitCardController;
 use App\Http\Controllers\Admin\BatchesController;
+use App\Http\Controllers\Admin\BatchViewController;
+use App\Http\Controllers\Admin\ClassRoomController;
 use App\Http\Controllers\Admin\HelperController;
+use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TeacherController;
 
+use App\Http\Controllers\Student\StudentAttendanceController;
+use App\Http\Controllers\Student\StudentCourseController;
+use App\Http\Controllers\Student\StudentDashboardController;
+use App\Http\Controllers\Student\StudentGradeController;
+use App\Http\Controllers\Student\StudentNotificationController;
+use App\Http\Controllers\Student\StudentProfileController;
+use App\Http\Controllers\Teacher\AddentanceController;
 use App\Models\Admin;
 use App\Models\Teachers;
+use GuzzleHttp\Middleware;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Super\AddSubAdminController;
 use App\Http\Controllers\Super\PermissionController;
 use App\Http\Controllers\Super\SupperAdminDashboardController;
 use App\Http\Controllers\SubAdminDashboardController;
- use App\Http\Controllers\superAdmin\TokenController;
- use App\Http\Controllers\subAdmin\createAdminController;
+use App\Http\Controllers\superAdmin\TokenController;
+use App\Http\Controllers\subAdmin\createAdminController;
 //  use App\Http\Controllers\Admin\SubjectController;
- use App\Http\Controllers\Admin\SubjectController;
+use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\LoginController;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
@@ -26,22 +42,30 @@ Route::post('/ping', function () {
 Route::post('/test-post', function () {
     return response()->json(['message' => 'CSRF bypassed']);
 });
+// getInertia of teacher Controller
+
+Route::get('/teacher', [TeacherController::class, 'getInertia']);
+
+
+Route::post('/teacher/login', [TeacherController::class, 'login']);
+
 
 // ---------------- Authenticated Routes ----------------
-Route::get('/', function () {
+Route::get('/admin', function () {
     return Inertia::render('Auth/collageLogin');
 });
-Route::post('/', [LoginController::class, 'collageLogin'])->name('collageLogin');
+Route::post('/admin', [LoginController::class, 'collageLogin'])->name('collageLogin');
 
 
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// ---------------- Authenticated Routes ----------------
 
+// ---------------- Student Routes ----------------
 
-
+Route::get('/', [StudentController::class, 'getLoginPage'])->name('student.login');
+Route::post('/student-login', [StudentController::class, 'getLoginDetailsCheck'])->name('student.login.submit');
 // ---------------- Super Admin Routes ----------------
 Route::prefix('supper')->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\SupperAdminDashboardController::class, 'index'])->name('supper.dashboard.index');
@@ -57,7 +81,7 @@ Route::prefix('supper')->group(function () {
     Route::delete('permission/{id}', [PermissionController::class, 'destroy']);
     Route::get('roles', [PermissionController::class, 'getRoles']);
     Route::delete('delete-subadmin/{id}', [AddSubAdminController::class, 'destroy'])->name('supper.delete-subadmin');
-// ---------------- Token Routes ----------------
+    // ---------------- Token Routes ----------------
     Route::get('roles', [PermissionController::class, 'getRoles'])->name('supper.roles');
     Route::get('tokens-get', [TokenController::class, 'index'])->name('supper.tokens.index');
     Route::get('/fetch-subadmins', [TokenController::class, 'fetchSubAdmins']);
@@ -67,10 +91,10 @@ Route::prefix('supper')->group(function () {
     Route::delete('/tokens/{id}', [TokenController::class, 'destroy']);
     Route::post('/tokens/{id}/regenerate', [TokenController::class, 'regenerate']);
 
- 
 
 
-// role route added
+
+    // role route added
 
 
 });
@@ -95,11 +119,11 @@ Route::prefix('subadmin')->middleware(['role:user'])->group(function () {
     // to created admin users here  
     Route::post('/createAdmin', [CreateAdminController::class, 'create'])->name('subadmin.createAdmin');
     // Update admin details
-     Route::put('/admins/{id}', [CreateAdminController::class, 'update']);
+    Route::put('/admins/{id}', [CreateAdminController::class, 'update']);
     // Route::delete('/admins/{id}', [CreateAdminController::class, 'delete
 });
 
- Route::get('/subadmin/{id}/permissions', [SubAdminDashboardController::class, 'getPermissions']);
+Route::get('/subadmin/{id}/permissions', [SubAdminDashboardController::class, 'getPermissions']);
 
 
 // ---------------- CSRF Token Test Route ----------------
@@ -108,8 +132,14 @@ Route::get('/csrf-token', function () {
 });
 
 Route::prefix('admin')->middleware(['newrole:CollegeAdmin'])->group(function () {
+Route::get('/{adminId}/batch/{batchId}/teachers', [BatchViewController::class, 'index']);
+Route::post('/{admin_id}/batch/{batch_id}/assign-subject', [BatchViewController::class, 'assignSubject']);
+Route::get('/{adminId}/batch/{batchId}/assignments', [BatchViewController::class, 'getAssignments']);   
+Route::delete('/{adminId}/batch/{batchId}/assignments/{assignmentId}', [BatchViewController::class, 'deleteAssignment']);
+Route::put('/{adminId}/batch/{batchId}/assignments/{assignmentId}', [BatchViewController::class, 'editAssignment']);
+Route::delete('/{adminId}/batch/{batchId}/teachers/{teacherId}', [BatchViewController::class, 'removeTeacherFromBatch']);
 
-   // Admin Dashboard Page
+// Admin Dashboard Page
     Route::get('/t', function (Request $request) {
         $admin = $request->session()->get('admin');
 
@@ -131,84 +161,194 @@ Route::prefix('admin')->middleware(['newrole:CollegeAdmin'])->group(function () 
 
     // ✅ Batch route with correct method
     Route::get('/batch', [BatchesController::class, 'indexs'])->name('admin.batch.index');
-
-      Route::get('/{id}/batches', [BatchesController::class, 'index']);
+    //problem 
+    Route::get('/{id}/batches', [BatchesController::class, 'index']);
+    Route::get('/batches/{id}', [BatchesController::class, 'show'])
+        ->name('admin.batches.show');
     Route::post('/batches', [BatchesController::class, 'store']);
+    //probem
     Route::put('/batches/{id}', [BatchesController::class, 'update']);
     Route::delete('/batches/{id}', [BatchesController::class, 'destroy']);
-//     Route::get('/teachers',function(){
+    //     Route::get('/teachers',function(){
 // return Inertia::render('admin/SubjectAssign');
 
-//     });
+    //     });
 
 
 
 
-    Route::get('/TeacherDrawer', function(){
+    Route::get('/TeacherDrawer', function () {
         return Inertia::render('admin/TeacherDrawer');
     })->name('admin.teachers.index');
- 
- Route::post('{id}/teachers', function (Request $request, $adminId) {
-    $data = $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'nullable|email',
-        'password' => 'required|string|',
-        'status' => 'required|in:Active,Inactive',
-        'batch_ids' => 'nullable|array',
-        'subject_ids' => 'nullable|array',
 
-    ]);
+
+
+
+
+    Route::post('{id}/teachers', function (Request $request, $adminId) {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email',
+            'password' => 'required|string|',
+            'status' => 'required|in:Active,Inactive',
+            'batch_ids' => 'nullable|array',
+
+        ]);
         $data['admin_id'] = $adminId;
-            $data['role'] = 'Teacher'; // 👈 Assign role here
-
-    
-    $teacher = Teachers::create($data);
-
-    return response()->json([
-        'message' => 'Teacher added successfully',
-        'teacher' => $teacher
-    ], 201);
-})->name('admin.teachers.store');
-Route::get('{id}/teachers', function ($adminId) {
-    $teachers = Teachers::where('admin_id', $adminId)->get();
-
-    return response()->json([
-        'teachers' => $teachers
-    ]);
-})->name('admin.teachers.index');
-
-Route::put('{id}/teachers/{teacherId}', function (Request $request, $adminId, $teacherId) {
-    $data = $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'nullable|email',
-        'status' => 'required|in:Active,Inactive',
-        'batch_ids' => 'nullable|array',
-        'subject_ids' => 'nullable|array',
-    ]);
-
-    $teacher = Teachers::where('admin_id', $adminId)->findOrFail($teacherId);
-    $teacher->update($data);
-
-    return response()->json([
-        'message' => 'Teacher updated successfully',
-        'teacher' => $teacher
-    ]);
-})->name('admin.teachers.update');
-
-Route::delete('{id}/teachers/{teacherId}', function ($adminId, $teacherId) {
-    $teacher = Teachers::where('admin_id', $adminId)->findOrFail($teacherId);
-    $teacher->delete();
-
-    return response()->json([
-        'message' => 'Teacher deleted successfully'
-    ]);
-})->name('admin.teachers.destroy');
+        $data['role'] = 'Teacher'; // 👈 Assign role here
 
 
-Route::get('/teachers/{id}/count', [HelperController::class, 'index'])->name('admin.helper.index');
-    
+        $teacher = Teachers::create($data);
+
+        return response()->json([
+            'message' => 'Teacher added successfully',
+            'teacher' => $teacher
+        ], 201);
+    })->name('admin.teachers.store');
+    Route::get('{id}/teachers', function ($adminId) {
+        $teachers = Teachers::where('admin_id', $adminId)->get();
+
+        return response()->json([
+            'teachers' => $teachers
+        ]);
+    })->name('admin.teachers.index');
+
+    Route::put('{id}/teachers/{teacherId}', function (Request $request, $adminId, $teacherId) {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email',
+            'status' => 'required|in:Active,Inactive',
+            'batch_ids' => 'nullable|array',
+        ]);
+
+        $teacher = Teachers::where('admin_id', $adminId)->findOrFail($teacherId);
+        $teacher->update($data);
+
+        return response()->json([
+            'message' => 'Teacher updated successfully',
+            'teacher' => $teacher
+        ]);
+    })->name('admin.teachers.update');
+
+    Route::delete('{id}/teachers/{teacherId}', function ($adminId, $teacherId) {
+        $teacher = Teachers::where('admin_id', $adminId)->findOrFail($teacherId);
+        $teacher->delete();
+
+        return response()->json([
+            'message' => 'Teacher deleted successfully'
+        ]);
+    })->name('admin.teachers.destroy');
 
 
+    Route::get('/teachers/{id}/count', [HelperController::class, 'index'])->name('admin.helper.index');
+
+
+    Route::get('/students', function () {
+        return Inertia::render('admin/StudentManagement');
+    })->name('admin.students.index');
+
+    Route::post('/student', [StudentController::class, 'store']);
+    Route::delete('/admin/{adminId}/students/{studentId}', [StudentController::class, 'destroy']);
+
+    Route::put('/students/{student}', [StudentController::class, 'update']);
+    Route::get('/{adminId}/students', [StudentController::class, 'getByAdmin']);
+    Route::get('/classRoomController', [ClassRoomController::class, 'index']);
+    Route::post("/{id}/class-room", [ClassRoomController::class, 'store'])->name('classroom.store');
+    Route::get('/{adminId}/class-rooms', [ClassRoomController::class, 'getRoomsByAdmin'])->name('classroom.getByAdmin');
+    Route::put('{adminId}/class-room/{roomId}', [ClassRoomController::class, 'update']);
+    Route::delete('/{adminId}/class-room/{roomId}', [ClassRoomController::class, 'destroy']);
+    Route::get('admin-card', [AdminCardController::class, 'index']);
+    Route::post('/{id}/admin-cards', [AdminCardController::class, 'store']);
+    Route::get('/{id}/admin-cards', [AdminCardController::class, 'getData']);
+    Route::put('/{adminId}/admin-cards/{cardId}/inactivate', [AdminCardController::class, 'inactivate']);
+    Route::put('/{adminId}/admin-cards/{cardId}/activate', [AdminCardController::class, 'activate']);
+    Route::delete('/{adminId}/admin-cards/{cardId}', [AdminCardController::class, 'destroy']);
+    Route::get('/{adminId}/admin-cards/student/{studentId}', [AdminCardController::class, 'getActiveStudentData']);
+    Route::get('admit-card-info-add', [AdmitCardController::class, 'index']);
+    Route::post('/admit-card', [AdmitCardController::class, 'store']);
+    Route::get('/admit-card/{adminId}', [AdmitCardController::class, 'indexs']);
+    Route::put('/admit-card/{id}', [AdmitCardController::class, 'update']); // Update
+    Route::delete('/admit-card/{id}', [AdmitCardController::class, 'destroy']); // Delete
+
+    //new admit desgin router 
+    //admit card folder
+        Route::get('/{id}/admit-card-folders', [AdmitCardFolderController::class, 'indexs']);
+    Route::get('/admit-card-folder',[AdmitCardFolderController::class,'index']);
+        Route::post('/{adminId}/admit-card-folder', [AdmitCardFolderController::class, 'store']);
+            Route::put('/{adminId}/admit-card-folder/{id}', [AdmitCardFolderController::class, 'update']);
+    Route::delete('/{adminId}/admit-card-folder/{id}', [AdmitCardFolderController::class, 'destroy']);
+    Route::get('/admit-card-folder/{id}', [AdmitCardFolderController::class, 'getIenertiaParamShow'])
+     ->name('admin.admit-card-folder.getIenertiaParamShow');
+Route::get('/{id}/AdminGetBatch', [BatchesController::class, 'AdminGetBatch']);
+    Route::post('/save-batch-folder', [BatchFolderController::class, 'store']);
+    Route::get('/admin-folder-data', [BatchFolderController::class, 'getAdminFolderData']);
+Route::delete('/delete-batch-folder/{id}', [BatchFolderController::class, 'destroy']);
+Route::post('/get-batches-by-ids', [BatchFolderController::class, 'getBatchesByIds']);
+});
+
+
+
+// Student routes
+Route::prefix('student')->middleware('student.session')->group(function () {
+    Route::get('{id}/teachers', function ($adminId) {
+        $teachers = Teachers::where('admin_id', $adminId)->get();
+
+        return response()->json([
+            'teachers' => $teachers
+        ]);
+    })->name('admin.teachers.index');
+    Route::get('dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard.index');
+    Route::get('/{adminId}/admin-cards/student/{studentId}', [AdminCardController::class, 'getActiveStudentData']);
+    Route::get('/admit-card/{adminId}', [AdmitCardController::class, 'indexs']);
+    Route::get('/{id}/batches', [BatchesController::class, 'index']);
+
+    Route::get('/{adminId}/class-rooms', [ClassRoomController::class, 'getRoomsByAdmin'])->name('classroom.getByAdmin');
+    Route::get('{id}/subjects', [SubjectController::class, 'get'])->name('admin.subjects.get');
+
+    Route::get('courses', [StudentCourseController::class, 'index'])->name('student.courses.index');
+
+    Route::get('grades', [StudentGradeController::class, 'index'])->name('student.grades.index');
+
+    Route::get('attendance', [StudentAttendanceController::class, 'index'])->name('student.attendance.index');
+
+    Route::get('profile', [StudentProfileController::class, 'index'])->name('student.profile.index');
+
+    Route::get('notifications', [StudentNotificationController::class, 'index'])->name('student.notifications.index');
+    Route::get('/admit-card-detail', [AdmitCardController::class, 'getStudent']);
+    // this will get amit card data 
+    Route::get('/{adminId}/admin-cards/student/{studentId}', [AdminCardController::class, 'getActiveStudentData']);
+    Route::get('/attendance/get/{student_id}/{admin_id}', action: [AddentanceController::class, 'getByStudentOrAdmin']);
+
+
+});
+
+Route::get('/student/{id}/details', [
+    StudentController::class,
+    'details'
+])->name('student.details');
+
+
+
+
+Route::prefix('teacher')->middleware(['teacher'])->group(function () {
+    Route::get('/addentance', [AddentanceController::class, 'index']);
+    Route::get('/dashboard', function () {
+        return inertia('teacher/TeacherDashboard', [
+            'teacher' => Session::get('teacher')
+        ]);
+    });
+    Route::get('/{id}/batches', [BatchesController::class, 'index']);
+
+    Route::get('/{id}', function ($id) {
+        $teacher = Teachers::findOrFail($id);
+        return response()->json($teacher);
+    });
+    Route::get('/students/admin/{adminId}/batch/{batchId}', [AddentanceController::class, 'getStudentsByAdminAndBatch']);
+
+    Route::post('/attendance', [AddentanceController::class, 'store']);
+    Route::get('/attendance/filter', [AddentanceController::class, 'getAttendanceByFilters']);
+    Route::put('/attendance', [AddentanceController::class, 'update']);
+    Route::get('/attendance/all/{teacher_id}/{admin_id}', action: [AddentanceController::class, 'getByTeacherOrAdmin']);
 
 });
 

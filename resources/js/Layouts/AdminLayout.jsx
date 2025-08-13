@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BaseProvider, useBaseContext } from '@/contexts/adminContext';
 import { Menu, Bell, Search, User, Home, Users, Settings, LogOut, X } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-
+import { Toaster } from "react-hot-toast";
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -63,7 +63,21 @@ const AdminLayout = ({ children }) => {
               </div>
             </div>
           </header>
-
+ <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            fontSize: '14px',
+          },
+          success: {
+            duration: 3000,
+            theme: {
+              primary: 'green',
+              secondary: 'white',
+            },
+          },
+        }}
+      />
           {/* Page content */}
           {children}
         </div>
@@ -113,6 +127,23 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       color: 'purple',
       permission: 'StudentManagementBatchShow',
     },
+     {
+      label: 'student management',
+      href: '/admin/students',
+      icon: Settings,
+      color: 'purple',
+    },
+       {
+      label: 'class Room Controller',
+      href: '/admin/classRoomController',
+      icon: Settings,
+      color: 'purple',
+    },   {
+      label: 'Admin card Controller',
+      href: '/admin/admin-card',
+      icon: Settings,
+      color: 'purple',
+    }
   ];
 
   return (

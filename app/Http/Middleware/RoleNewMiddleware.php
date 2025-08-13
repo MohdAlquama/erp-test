@@ -11,7 +11,7 @@ class RoleNewMiddleware
    public function handle(Request $request, Closure $next, string $role)
     {
         if (!$request->session()->has('admin')) {
-            return redirect('/');
+            return redirect('/admin');
         }
 
         $roles = $request->session()->get('admin.roles', []);

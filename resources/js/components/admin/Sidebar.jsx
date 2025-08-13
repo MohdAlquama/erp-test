@@ -24,7 +24,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     },
     {
       label: 'Users',
-      href: '/admin/subjects',
+      href: '/admin/students',
       icon: Users,
       color: 'green',
     },
@@ -34,6 +34,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       icon: Settings,
       color: 'purple',
       permission: 'StudentManagementBatchShow',
+    },
+    {
+      label: 'Student Management',
+      href: '/admin/students',
+      icon: Users,
+      color: 'orange',
+    },
+    {
+      label: 'Settings',
+      href: '/admin/settings',
+      icon: Settings,
+      color: 'gray',
+      permission: 'AdminSettingsShow',
     },
   ];
 

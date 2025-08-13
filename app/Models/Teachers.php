@@ -14,11 +14,9 @@ class Teachers extends Model
         'role', // Added role field
         'status',
         'batch_ids',
-        'subject_ids',
     ];
 
     protected $casts = [
         'batch_ids' => 'array',
-        'subject_ids' => 'array',
     ];
 }

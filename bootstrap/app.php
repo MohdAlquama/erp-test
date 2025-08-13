@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'newrole' => \App\Http\Middleware\RoleNewMiddleware::class, // ✅ Your new middleware alias
+            'student.session' => \App\Http\Middleware\StudentSessionAuth::class,
+            'teacher' => \App\Http\Middleware\TeacherAuth::class,
         ]);
 
         // ✅ Register web middleware

@@ -15,7 +15,7 @@ export default function CollageLogin() {
         setLoading(true);
         setErrors({});
 
-        axiosInstance.post('/', data)
+        axiosInstance.post('/admin', data)
   .then(res => {
     const user = res.data.detail;
     const roles = [user.role?.toLowerCase()]; // lowercase match

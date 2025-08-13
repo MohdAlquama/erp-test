@@ -15,7 +15,6 @@ return new class extends Migration {
             $table->string(column: 'password');
             $table->string('role')->default('Teacher'); // Default role for teachers
             $table->json('batch_ids')->nullable();    // Store assigned batches as JSON array
-            $table->json('subject_ids')->nullable();  // Store assigned subjects as JSON array
 
             $table->timestamps();
 

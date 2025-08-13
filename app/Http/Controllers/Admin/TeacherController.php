@@ -1,42 +1,61 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Teachers;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 
 class TeacherController extends Controller
 {
-    public function index($adminId)
+
+  
+    public function getInertia()
     {
-        $teachers = Teachers::where('admin_id', $adminId)->get();
-        return response()->json($teachers);
+        return Inertia::render('Auth/TeacherLogin');
     }
 
-    public function store(Request $request, $adminId)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email',
-            'password' => 'required|string|',
-            'status' => 'required|in:Active,Inactive',
-            'batch_ids' => 'nullable|array',
-            'subject_ids' => 'nullable|array',
+    public function login (Request $request) {
+    $data = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string',
+    ]);
+
+    $teacher = Teachers::where('email', $data['email'])->first();
+
+    if ($teacher && $data['password'] === $teacher->password) {
+        // Store teacher session
+        Session::put('teacher', [
+            'id' => $teacher->id,
+            'name' => $teacher->name,
+            'email' => $teacher->email,
+            'status' => $teacher->status,
+            'batch_ids' => $teacher->batch_ids,
+            'subject_ids' => $teacher->subject_ids,
+            'admin_id' => $teacher->admin_id,
+            'role' => $teacher->role,
         ]);
 
-
-        $teacher = Teachers::create($data);
-
         return response()->json([
-            'message' => 'Teacher added successfully',
-            'teacher' => $teacher
-        ], 201);
+            'message' => 'Login successful',
+            'teacher' => Session::get('teacher')
+        ], 200);
+       
     }
 
-    public function destroy($id)
-    {
-        $teacher = Teachers::findOrFail($id);
-        $teacher->delete();
+    return response()->json([
+        'message' => 'Invalid email or password'
+    ], 401);
+}
 
-        return response()->json(['message' => 'Teacher deleted']);
+    public function logout(Request $request)
+    {
+        Session::forget('teacher');
+        return response()->json([
+            'message' => 'Logout successful'
+        ], 200);
     }
 }
+

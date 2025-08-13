@@ -10,6 +10,9 @@ class StudentDashboardController extends Controller
 {
     public function index()
     {
-        return Inertia::render('student/StudentDashboard');
+        return Inertia::render('student/StudentDashboard',[
+            'student' => session('student'), // Pass student session data
+            
+        ]);
     }
 }

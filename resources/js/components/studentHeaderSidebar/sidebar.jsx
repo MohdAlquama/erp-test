@@ -1,99 +1,70 @@
-"use client";
+import { Link, router } from "@inertiajs/react";
+import { LayoutDashboard, BookOpen, Settings, LogOut } from "lucide-react";
+import { useStudent } from "@/contexts/StudentContext";
 
-import {
-    LayoutDashboard,
-    BookOpen,
-    GraduationCap,
-    Bell,
-    User,
-    CalendarCheck,
-    LogOut,
-    X,
-} from "lucide-react";
-import { Link, usePage, router } from "@inertiajs/react";
-import clsx from "clsx";
+export default function Sidebar() {
+  const { student, loading } = useStudent();
 
-// Student-specific navigation
-const navItems = [
-    { name: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
-    { name: "Attendance", href: "/student/attendance", icon: CalendarCheck },
-    { name: "Courses", href: "/student/courses", icon: BookOpen },
-    { name: "Grades", href: "/student/grades", icon: GraduationCap },
-    { name: "Notifications", href: "/student/notifications", icon: Bell },
-];
+  const handleLogout = () => {
+    router.post("/student-logout");
+  };
 
-export default function StudentSidebar({ isOpen, toggleSidebar }) {
-    const { url } = usePage();
-    const pathname = url;
+  return (
+    <aside className="bg-white shadow-lg w-64 min-h-screen flex flex-col">
+      {/* Profile section */}
+      <div className="p-6 border-b">
+        {loading ? (
+          <p className="text-gray-500">Loading...</p>
+        ) : (
+          <>
+            <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center text-lg font-bold">
+              {student?.name?.charAt(0) || "S"}
+            </div>
+            <p className="mt-3 font-semibold text-gray-800">
+              {student?.name}
+            </p>
+            <p className="text-sm text-gray-500">{student?.email}</p>
+          </>
+        )}
+      </div>
 
-    return (
-        <>
-            {isOpen && (
-                <div
-                    onClick={toggleSidebar}
-                    className="fixed inset-0 bg-black/40 z-30 md:hidden"
-                />
-            )}
+      {/* Navigation links */}
+      <nav className="flex-1 p-4 space-y-2">
+        <Link
+          href="/student/dashboard"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 text-gray-700 transition"
+        >
+          <LayoutDashboard className="w-5 h-5" />
+          Dashboard
+        </Link>
 
-            <aside
-                className={clsx(
-                    "fixed top-0 left-0 z-40 w-64 bg-white dark:bg-gray-900 h-full shadow-lg transition-transform duration-300 flex flex-col",
-                    isOpen
-                        ? "translate-x-0"
-                        : "-translate-x-full md:translate-x-0"
-                )}
-            >
-                {/* Header */}
-                <div className="flex items-center justify-between px-4 py-4 bg-blue-600 text-white">
-                    <h2 className="font-bold text-lg">Student</h2>
-                    <button onClick={toggleSidebar} className="md:hidden">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+        <Link
+          href="/student/courses"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 text-gray-700 transition"
+        >
+          <BookOpen className="w-5 h-5" />
+          My Courses
+        </Link>
 
-                {/* Navigation */}
-                <div className="flex-1 overflow-y-auto">
-                    <nav className="flex flex-col mt-4 space-y-1 px-4">
-                        {navItems.map((item) => {
-                            const isActive = pathname.startsWith(item.href);
-                            return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={clsx(
-                                        "flex items-center gap-3 px-4 py-2 rounded-md font-medium transition-colors",
-                                        isActive
-                                            ? "bg-blue-500 text-white"
-                                            : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-                                    )}
-                                >
-                                    <item.icon className="w-5 h-5" />
-                                    {item.name}
-                                </Link>
-                            );
-                        })}
-                    </nav>
-                </div>
+        <Link
+          href="/student/admit-card-detail"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 text-gray-700 transition"
+        >
+          <Settings className="w-5 h-5" />
+          Admit Card
+        </Link>
+      </nav>
 
-                {/* Profile and Logout */}
-                <div className="px-4 py-3 border-t dark:border-gray-800 space-y-2">
-                    <Link
-                        href="/student/profile"
-                        className="flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-md w-full"
-                    >
-                        <User className="w-5 h-5" />
-                        Profile
-                    </Link>
-
-                    <button
-                        onClick={() => router.post("/logout")}
-                        className="flex items-center gap-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 p-2 rounded-md w-full"
-                    >
-                        <LogOut className="w-5 h-5" />
-                        Logout
-                    </button>
-                </div>
-            </aside>
-        </>
-    );
+      {/* Logout button */}
+      <div className="p-4 border-t">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg hover:bg-red-50 text-red-600 transition"
+        >
+          <LogOut className="w-5 h-5" />
+          Logout
+        </button>
+      </div>
+    </aside>
+  );
 }

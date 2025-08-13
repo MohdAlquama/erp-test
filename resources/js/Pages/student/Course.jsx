@@ -1,529 +1,408 @@
 "use client";
-
+import { useStudent } from "@/contexts/StudentContext";
 import StudentLayout from "@/Layouts/StudentLayout";
-import { Link } from "@inertiajs/react";
-import {
-    BookOpen,
-    Search,
-    FlaskConical,
-    Book,
-    Calculator,
-    Languages,
-    Globe,
-    FileText,
-    PenTool,
-    Landmark,
-    Wallet,
-    Brain,
-    Atom,
-} from "lucide-react";
-import { useState } from "react";
-
-// Icons mapped to subjects
-const subjectIcons = {
-    Mathematics: <Calculator className="w-5 h-5 mr-1 inline" />,
-    Science: <FlaskConical className="w-5 h-5 mr-1 inline" />,
-    English: <Languages className="w-5 h-5 mr-1 inline" />,
-    Hindi: <Book className="w-5 h-5 mr-1 inline" />,
-    Geography: <Globe className="w-5 h-5 mr-1 inline" />,
-    History: <Landmark className="w-5 h-5 mr-1 inline" />,
-    Economics: <Wallet className="w-5 h-5 mr-1 inline" />,
-    Accountancy: <FileText className="w-5 h-5 mr-1 inline" />,
-    Business: <Book className="w-5 h-5 mr-1 inline" />,
-    Psychology: <Brain className="w-5 h-5 mr-1 inline" />,
-    Physics: <Atom className="w-5 h-5 mr-1 inline" />,
-    Chemistry: <FlaskConical className="w-5 h-5 mr-1 inline" />,
-    Biology: <PenTool className="w-5 h-5 mr-1 inline" />,
-};
-
-// Dummy school course data with class names
-const courseData = [
-    // Class 1
-    {
-        id: 1,
-        name: "Mathematics",
-        className: "Class 1",
-        instructor: "Ms. Kaur",
-        credits: 2,
-    },
-    {
-        id: 2,
-        name: "English",
-        className: "Class 1",
-        instructor: "Mrs. Lata",
-        credits: 2,
-    },
-    {
-        id: 3,
-        name: "EVS",
-        className: "Class 1",
-        instructor: "Mr. Rathi",
-        credits: 1,
-    },
-
-    // Class 2
-    {
-        id: 4,
-        name: "Mathematics",
-        className: "Class 2",
-        instructor: "Mr. Roy",
-        credits: 2,
-    },
-    {
-        id: 5,
-        name: "English",
-        className: "Class 2",
-        instructor: "Mrs. Das",
-        credits: 2,
-    },
-    {
-        id: 6,
-        name: "EVS",
-        className: "Class 2",
-        instructor: "Ms. Kiran",
-        credits: 1,
-    },
-
-    // Class 3
-    {
-        id: 7,
-        name: "Mathematics",
-        className: "Class 3",
-        instructor: "Ms. Desai",
-        credits: 3,
-    },
-    {
-        id: 8,
-        name: "English",
-        className: "Class 3",
-        instructor: "Mr. Gill",
-        credits: 2,
-    },
-    {
-        id: 9,
-        name: "Science",
-        className: "Class 3",
-        instructor: "Mrs. Fernandes",
-        credits: 2,
-    },
-
-    // Class 4
-    {
-        id: 10,
-        name: "Mathematics",
-        className: "Class 4",
-        instructor: "Ms. Thomas",
-        credits: 3,
-    },
-    {
-        id: 11,
-        name: "English",
-        className: "Class 4",
-        instructor: "Mr. Iqbal",
-        credits: 2,
-    },
-    {
-        id: 12,
-        name: "Science",
-        className: "Class 4",
-        instructor: "Ms. Patel",
-        credits: 2,
-    },
-
-    // Class 5
-    {
-        id: 13,
-        name: "Mathematics",
-        className: "Class 5",
-        instructor: "Mr. Abraham",
-        credits: 3,
-    },
-    {
-        id: 14,
-        name: "English",
-        className: "Class 5",
-        instructor: "Mrs. Pillai",
-        credits: 2,
-    },
-    {
-        id: 15,
-        name: "Science",
-        className: "Class 5",
-        instructor: "Ms. Jain",
-        credits: 2,
-    },
-
-    // Class 6
-    {
-        id: 16,
-        name: "Mathematics",
-        className: "Class 6",
-        instructor: "Mrs. Sharma",
-        credits: 4,
-    },
-    {
-        id: 17,
-        name: "Science",
-        className: "Class 6",
-        instructor: "Mr. Verma",
-        credits: 3,
-    },
-    {
-        id: 18,
-        name: "English",
-        className: "Class 6",
-        instructor: "Ms. Rao",
-        credits: 2,
-    },
-
-    // Class 7
-    {
-        id: 19,
-        name: "Mathematics",
-        className: "Class 7",
-        instructor: "Mrs. Kapoor",
-        credits: 4,
-    },
-    {
-        id: 20,
-        name: "Science",
-        className: "Class 7",
-        instructor: "Mr. Rana",
-        credits: 3,
-    },
-    {
-        id: 21,
-        name: "English",
-        className: "Class 7",
-        instructor: "Ms. Iyer",
-        credits: 2,
-    },
-
-    // Class 8
-    {
-        id: 22,
-        name: "Mathematics",
-        className: "Class 8",
-        instructor: "Mrs. Mehta",
-        credits: 4,
-    },
-    {
-        id: 23,
-        name: "Science",
-        className: "Class 8",
-        instructor: "Mr. Singh",
-        credits: 3,
-    },
-    {
-        id: 24,
-        name: "English",
-        className: "Class 8",
-        instructor: "Ms. Gupta",
-        credits: 2,
-    },
-
-    // Class 9
-    {
-        id: 25,
-        name: "Mathematics",
-        className: "Class 9",
-        instructor: "Mr. Bhatt",
-        credits: 4,
-    },
-    {
-        id: 26,
-        name: "Science",
-        className: "Class 9",
-        instructor: "Ms. Bose",
-        credits: 4,
-    },
-    {
-        id: 27,
-        name: "Social Science",
-        className: "Class 9",
-        instructor: "Mr. Pandey",
-        credits: 3,
-    },
-
-    // Class 10
-    {
-        id: 28,
-        name: "Mathematics",
-        className: "Class 10",
-        instructor: "Ms. Tyagi",
-        credits: 4,
-    },
-    {
-        id: 29,
-        name: "Science",
-        className: "Class 10",
-        instructor: "Mr. Saxena",
-        credits: 4,
-    },
-    {
-        id: 30,
-        name: "Social Science",
-        className: "Class 10",
-        instructor: "Mrs. Rani",
-        credits: 3,
-    },
-
-    // Class 11
-    {
-        id: 31,
-        name: "Mathematics",
-        className: "Class 11",
-        instructor: "Dr. Ahuja",
-        credits: 5,
-    },
-    {
-        id: 32,
-        name: "Physics",
-        className: "Class 11",
-        instructor: "Mr. Nair",
-        credits: 4,
-    },
-    {
-        id: 33,
-        name: "Chemistry",
-        className: "Class 11",
-        instructor: "Ms. Paul",
-        credits: 4,
-    },
-
-    // Class 12
-    {
-        id: 34,
-        name: "Mathematics",
-        className: "Class 12",
-        instructor: "Mr. Dutta",
-        credits: 5,
-    },
-    {
-        id: 35,
-        name: "Physics",
-        className: "Class 12",
-        instructor: "Mrs. Menon",
-        credits: 4,
-    },
-    {
-        id: 36,
-        name: "Chemistry",
-        className: "Class 12",
-        instructor: "Mr. Chakraborty",
-        credits: 4,
-    },
-    {
-        id: 37,
-        name: "Economics",
-        className: "Class 11",
-        stream: "Commerce",
-        instructor: "Ms. Singh",
-        credits: 4,
-    },
-    {
-        id: 38,
-        name: "Accountancy",
-        className: "Class 11",
-        stream: "Commerce",
-        instructor: "Mr. Patel",
-        credits: 4,
-    },
-    {
-        id: 39,
-        name: "Business",
-        className: "Class 11",
-        stream: "Commerce",
-        instructor: "Mrs. Ghosh",
-        credits: 4,
-    },
-    {
-        id: 40,
-        name: "Psychology",
-        className: "Class 11",
-        stream: "Arts",
-        instructor: "Mr. Raza",
-        credits: 4,
-    },
-    {
-        id: 41,
-        name: "History",
-        className: "Class 11",
-        stream: "Arts",
-        instructor: "Ms. Malik",
-        credits: 4,
-    },
-    {
-        id: 42,
-        name: "Geography",
-        className: "Class 11",
-        stream: "Arts",
-        instructor: "Dr. Nath",
-        credits: 4,
-    },
-];
-
-// Class tabs and optional stream filters
-const classTabs = Array.from({ length: 12 }, (_, i) => `Class ${i + 1}`);
-const streamOptions = ["Science", "Commerce", "Arts"];
-
-export default function Courses() {
-    const [search, setSearch] = useState("");
-    const [selectedClass, setSelectedClass] = useState("Class 6");
-    const [selectedStream, setSelectedStream] = useState("Science");
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 6;
-
-    const isSeniorClass =
-        selectedClass === "Class 11" || selectedClass === "Class 12";
-
-    const filtered = courseData.filter((course) => {
-        const matchesSearch = course.name
-            .toLowerCase()
-            .includes(search.toLowerCase());
-        const matchesClass = course.className === selectedClass;
-        const matchesStream =
-            !isSeniorClass || course.stream === selectedStream;
-        return matchesSearch && matchesClass && matchesStream;
-    });
-
-    const pageCount = Math.ceil(filtered.length / pageSize);
-    const paginated = filtered.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
-    );
-
-    const handlePageChange = (page) => {
-        if (page >= 1 && page <= pageCount) setCurrentPage(page);
-    };
-
+import axiosInstance from "@/utils/axiosInstance";
+import React, { useEffect, useState } from "react";
+function Course() {
+  const { student, loading } = useStudent();
+  const [batches, setBatches] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [fetchError, setFetchError] = useState(null);
+  // Fetch data
+  useEffect(() => {
+    if (student?.admin_id && student?.id) {
+      // Fetch batches
+      axiosInstance
+        .get(`/student/${student.admin_id}/batches`)
+        .then((res) => {
+          setBatches(res.data);
+          console.log(res.data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch batches", err);
+          setFetchError("Failed to load batches.");
+        });
+      // Fetch subjects
+      axiosInstance
+        .get(`/student/${student.admin_id}/subjects`)
+        .then((res) => {
+          setSubjects(res.data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch subjects", err);
+          setFetchError("Failed to load subjects.");
+        });
+      // Fetch teachers
+      axiosInstance
+        .get(`/student/${student.admin_id}/teachers`)
+        .then((res) => {
+          setTeachers(res.data.teachers);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch teachers", err);
+          setFetchError("Failed to load teachers.");
+        });
+    }
+  }, [student?.admin_id, student?.id]);
+  if (loading) {
     return (
-        <StudentLayout>
-            <div className="mb-6 flex items-center gap-2 mt-12">
-                <BookOpen className="w-6 h-6 text-indigo-600" />
-                <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">
-                    School Courses
-                </h1>
-            </div>
-
-            <div className="mb-4 flex flex-wrap gap-2">
-                {classTabs.map((cls) => (
-                    <button
-                        key={cls}
-                        onClick={() => {
-                            setSelectedClass(cls);
-                            setCurrentPage(1);
-                        }}
-                        className={`px-4 py-1 rounded-full text-sm border ${
-                            selectedClass === cls
-                                ? "bg-indigo-600 text-white"
-                                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white border-gray-300 dark:border-gray-600"
-                        }`}
-                    >
-                        {cls}
-                    </button>
-                ))}
-            </div>
-
-            {isSeniorClass && (
-                <div className="mb-4 flex gap-2">
-                    {streamOptions.map((stream) => (
-                        <button
-                            key={stream}
-                            onClick={() => setSelectedStream(stream)}
-                            className={`px-4 py-1 rounded-full text-sm border ${
-                                selectedStream === stream
-                                    ? "bg-indigo-600 text-white"
-                                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white border-gray-300 dark:border-gray-600"
-                            }`}
-                        >
-                            {stream}
-                        </button>
-                    ))}
-                </div>
-            )}
-
-            <div className="mb-4 flex items-center gap-2 w-full md:w-1/2">
-                <Search className="w-4 h-4 text-gray-500" />
-                <input
-                    type="text"
-                    placeholder="Search by course name..."
-                    className="px-4 py-2 w-full border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white dark:border-gray-700"
-                    value={search}
-                    onChange={(e) => {
-                        setSearch(e.target.value);
-                        setCurrentPage(1);
-                    }}
-                />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {paginated.map((course) => (
-                    <div
-                        key={course.id}
-                        className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-xl p-5 shadow-sm flex flex-col justify-between"
-                    >
-                        <div>
-                            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-                                {subjectIcons[course.name] || null}
-                                {course.name}
-                            </h2>
-                            <p className="text-gray-500 dark:text-gray-400 mt-1">
-                                <strong>Instructor:</strong> {course.instructor}
-                            </p>
-                            <p className="text-gray-500 dark:text-gray-400">
-                                <strong>Class:</strong> {course.className}
-                            </p>
-                            <p className="text-gray-500 dark:text-gray-400">
-                                <strong>Credits:</strong> {course.credits}
-                            </p>
-                        </div>
-                        <div className="mt-4">
-                            <Link
-                                href={`/student/courses/${course.id}`}
-                                className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
-                            >
-                                View Details
-                            </Link>
-                        </div>
-                    </div>
-                ))}
-                {paginated.length === 0 && (
-                    <p className="text-gray-500 dark:text-gray-400 col-span-full text-center mt-4">
-                        No courses found.
-                    </p>
-                )}
-            </div>
-
-            <div className="flex justify-center mt-6 space-x-2">
-                <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 dark:text-white"
-                >
-                    Prev
-                </button>
-                {Array.from({ length: pageCount }, (_, i) => (
-                    <button
-                        key={i + 1}
-                        onClick={() => handlePageChange(i + 1)}
-                        className={`px-3 py-1 text-sm rounded-md ${
-                            currentPage === i + 1
-                                ? "bg-indigo-600 text-white"
-                                : "border border-gray-300 dark:border-gray-600 dark:text-white"
-                        }`}
-                    >
-                        {i + 1}
-                    </button>
-                ))}
-                <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === pageCount}
-                    className="px-3 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 dark:text-white"
-                >
-                    Next
-                </button>
-            </div>
-        </StudentLayout>
+      <div className="p-4 sm:p-6 bg-white shadow rounded-lg w-full">
+        <p className="text-gray-500">Loading...</p>
+      </div>
     );
+  }
+  if (fetchError) {
+    return (
+      <div className="p-4 sm:p-6 bg-white shadow rounded-lg w-full">
+        <p className="text-red-600">{fetchError}</p>
+      </div>
+    );
+  }
+  // Prepare course data for all batches
+  const courseData = (student?.batch_ids || []).map((batchId) => {
+    const batch = batches.find((b) => b.id === Number(batchId)) || {
+      name: "Unknown Batch",
+      created_at: student?.created_at,
+    };
+    const subjectNames = (student?.subject_ids || [])
+      .map((subjectId) => {
+        const subject = subjects.find((s) => s.id === Number(subjectId));
+        return subject ? subject.subject : "Unknown Subject";
+      })
+      .join(", ");
+    return {
+      batchName: batch.name,
+      subjectNames: subjectNames || "No Subjects",
+      status: student?.status || "Unknown",
+      startDate: batch.created_at
+        ? new Date(batch.created_at).toISOString().split("T")[0]
+        : "N/A",
+    };
+  }).filter((course) => course.batchName !== "Unknown Batch");
+
+  // Prepare teacher data
+  const teacherData = (student?.teacher_ids || []).map((teacherId) => {
+    const teacher = teachers.find((t) => t.id === Number(teacherId)) || {
+      name: "Unknown Teacher",
+      email: "N/A",
+      status: "N/A",
+      batch_ids: [],
+      subject_ids: [],
+    };
+    const teacherBatchNames = (teacher.batch_ids || [])
+      .map((bId) => {
+        const b = batches.find((batch) => batch.id === Number(bId));
+        return b ? b.name : "Unknown Batch";
+      })
+      .join(", ");
+    const teacherSubjectNames = (teacher.subject_ids || [])
+      .map((sId) => {
+        const s = subjects.find((subject) => subject.id === Number(sId));
+        return s ? s.subject : "Unknown Subject";
+      })
+      .join(", ");
+    return {
+      name: teacher.name,
+      email: teacher.email,
+      status: teacher.status,
+      batchNames: teacherBatchNames || "None",
+      subjectNames: teacherSubjectNames || "None",
+    };
+  });
+  return (
+    <div className="p-4 sm:p-6 bg-white shadow rounded-lg w-full">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-8 mb-6">
+        <section className="flex flex-col">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
+            My Course
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            You are enrolled in {courseData.length} course{courseData.length !== 1 ? 's' : ''}
+          </p>
+        </section>
+        <section className="flex flex-col">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
+            Total Subjects
+          </h1>
+          <p className="text-base sm:text-lg font-medium text-gray-600">
+            {student?.subject_ids?.length || 0}
+          </p>
+        </section>
+        <section className="flex flex-col">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
+            Date
+          </h1>
+          <p className="text-base sm:text-lg font-medium text-gray-600">
+            {new Date().toISOString().split("T")[0]}
+          </p>
+        </section>
+      </div>
+      {/* Course Section */}
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
+        Course Details
+      </h2>
+      {/* Mobile: Card Layout */}
+      <div className="sm:hidden space-y-4">
+        {courseData.length > 0 ? (
+          courseData.map((course, index) => (
+            <div
+              key={index}
+              className="p-4 border border-gray-200 rounded-lg shadow-sm bg-white"
+            >
+              <div className="mb-2">
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  Course Name
+                </span>
+                <p className="text-sm text-gray-900">{course.batchName}</p>
+              </div>
+              <div className="mb-2">
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  Subjects
+                </span>
+                <p className="text-sm text-gray-900">{course.subjectNames}</p>
+              </div>
+              <div className="mb-2">
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  Status
+                </span>
+                <p>
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      course.status === "Active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {course.status}
+                  </span>
+                </p>
+              </div>
+              <div>
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  Start Date
+                </span>
+                <p className="text-sm text-gray-900">{course.startDate}</p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-4 text-center text-sm text-gray-500">
+            No course found.
+          </div>
+        )}
+      </div>
+      {/* Desktop: Table Layout */}
+      <div className="hidden sm:block overflow-x-auto mb-8">
+        <table className="w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Course Name
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Subjects
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Start Date
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {courseData.length > 0 ? (
+              courseData.map((course, index) => (
+                <tr key={index}>
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    {course.batchName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    {course.subjectNames}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        course.status === "Active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {course.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    {course.startDate}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="4"
+                  className="px-4 py-3 text-center text-sm text-gray-500"
+                >
+                  No course found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {/* Teachers Section */}
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
+        Teachers
+      </h2>
+      {/* Mobile: Card Layout */}
+      <div className="sm:hidden space-y-4">
+        {teacherData.length > 0 ? (
+          teacherData.map((teacher, index) => (
+            <div
+              key={index}
+              className="p-4 border border-gray-200 rounded-lg shadow-sm bg-white"
+            >
+              <div className="mb-2">
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  Name
+                </span>
+                <p className="text-sm text-gray-900">{teacher.name}</p>
+              </div>
+              <div className="mb-2">
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  Email
+                </span>
+                <p className="text-sm text-gray-900">{teacher.email}</p>
+              </div>
+              <div className="mb-2">
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  Status
+                </span>
+                <p>
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      teacher.status === "Active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {teacher.status}
+                  </span>
+                </p>
+              </div>
+              <div className="mb-2">
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  Batches
+                </span>
+                <p className="text-sm text-gray-900">{teacher.batchNames}</p>
+              </div>
+              <div>
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  Subjects
+                </span>
+                <p className="text-sm text-gray-900">{teacher.subjectNames}</p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-4 text-center text-sm text-gray-500">
+            No teachers found.
+          </div>
+        )}
+      </div>
+      {/* Desktop: Table Layout */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Name
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Batches
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Subjects
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {teacherData.length > 0 ? (
+              teacherData.map((teacher, index) => (
+                <tr key={index}>
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    {teacher.name}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    {teacher.email}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        teacher.status === "Active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {teacher.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    {teacher.batchNames}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-900">
+                    {teacher.subjectNames}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="5"
+                  className="px-4 py-3 text-center text-sm text-gray-500"
+                >
+                  No teachers found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {/* Chart Placeholder */}
+      <div className="mt-8">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
+          Course Summary
+        </h2>
+        <p className="text-sm sm:text-base text-gray-600">
+          Chart placeholder (e.g., subject count). Please specify chart details if
+          needed.
+        </p>
+        {/*
+        <div className="mt-4 bg-white p-4 rounded-lg shadow max-w-full">
+          <chartjs type="bar">
+            {
+              "labels": ["Subjects"],
+              "datasets": [{
+                "label": "Number of Subjects",
+                "data": [student?.subject_ids?.length || 0],
+                "backgroundColor": "#3b82f6",
+                "borderColor": "#2563eb",
+                "borderWidth": 1
+              }]
+            }
+          </chartjs>
+        </div>
+        */}
+      </div>
+    </div>
+  );
 }
+export default Course;
+Course.layout = (page) => <StudentLayout>{page}</StudentLayout>;
