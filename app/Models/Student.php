@@ -40,7 +40,6 @@ class Student extends Model
      * @var array
      */
     protected $casts = [
-        'batch_ids' => 'array', // Cast JSON to array
                 'dob' => 'date',
      
     ];

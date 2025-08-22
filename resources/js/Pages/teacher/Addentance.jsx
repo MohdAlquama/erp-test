@@ -1,311 +1,420 @@
-import { useTeacher } from '@/contexts/TeacherContext';
-import TeacherLayout from '@/Layouts/TeacherLayout';
-import axiosInstance from '@/utils/axiosInstance';
-import React, { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import { useTeacher } from "@/contexts/TeacherContext";
+import TeacherLayout from "@/Layouts/TeacherLayout";
+import axiosInstance from "@/utils/axiosInstance";
+import React, { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import CheckAttendance from "./CheckAttendance";
 
 export default function Attendance() {
   const { teacherData } = useTeacher();
   const [batches, setBatches] = useState([]);
-  const [selectedBatch, setSelectedBatch] = useState('');
+  const [selectedBatch, setSelectedBatch] = useState("");
+  const [subjects, setSubjects] = useState([]);
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [attendanceDate, setAttendanceDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [students, setStudents] = useState([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
-  const [attendanceData, setAttendanceData] = useState({});
-  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
-  const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [reloadAttendance, setReloadAttendance] = useState(0);
 
-  // Fetch batches
+  // Fetch teacher's allowed batches
   useEffect(() => {
     if (!teacherData?.admin_id) return;
 
-    const fetchBatches = async () => {
-      try {
-        const res = await axiosInstance.get(`/teacher/${teacherData.admin_id}/batches`);
-        setBatches(res.data);
-      } catch (error) {
-        console.error('Failed to fetch batches:', error);
-      }
-    };
-    fetchBatches();
+    axiosInstance
+      .get(`/teacher/admin/${teacherData.admin_id}/batches`)
+      .then((res) => {
+        if (res.data.success) {
+          let teacherBatchIds = [];
+          if (teacherData?.batch_ids) {
+            if (Array.isArray(teacherData.batch_ids)) {
+              teacherBatchIds = teacherData.batch_ids.map((id) => parseInt(id));
+            } else if (typeof teacherData.batch_ids === "string") {
+              teacherBatchIds = teacherData.batch_ids
+                .split(",")
+                .map((id) => parseInt(id));
+            } else {
+              teacherBatchIds = [parseInt(teacherData.batch_ids)];
+            }
+          }
+
+          const allowedBatches = res.data.data.filter((b) =>
+            teacherBatchIds.includes(b.id)
+          );
+          setBatches(allowedBatches);
+        }
+      })
+      .catch((err) => {
+        toast.error("Error fetching batches");
+        console.error(err);
+      });
   }, [teacherData]);
 
-  // Fetch students for selected batch
+  // Fetch subjects when batch is selected
   useEffect(() => {
-    if (!selectedBatch || !teacherData?.admin_id) {
-      setStudents([]);
-      setAttendanceData({});
-      return;
-    }
+    if (!selectedBatch || !teacherData?.id) return;
 
-    const fetchStudents = async () => {
-      setLoadingStudents(true);
-      try {
-        const res = await axiosInstance.get(
-          `/teacher/students/admin/${teacherData.admin_id}/batch/${selectedBatch}`
-        );
-        setStudents(res.data.data);
-      } catch (error) {
-        console.error('Failed to fetch students:', error);
-      }
-      setLoadingStudents(false);
-    };
-    fetchStudents();
+    setLoadingSubjects(true);
+    setSubjects([]);
+    setSelectedSubject("");
+
+    axiosInstance
+      .post(`/teacher/subjects`, {
+        admin_id: teacherData.admin_id,
+        batch_id: selectedBatch,
+        teacher_id: teacherData.id,
+      })
+      .then((res) => {
+        if (res.data.success) {
+          setSubjects(res.data.data);
+        } else {
+          toast.error("No subjects found");
+        }
+      })
+      .catch((err) => {
+        toast.error("Error fetching subjects");
+        console.error(err);
+      })
+      .finally(() => setLoadingSubjects(false));
   }, [selectedBatch, teacherData]);
 
-  // Fetch attendance for batch & date
-  useEffect(() => {
-    if (!teacherData?.id || !teacherData?.admin_id || !selectedBatch || !currentDate) {
-      setAttendanceData({});
+  // Fetch students when subject and date are selected
+  const handleSubmit = () => {
+    if (!selectedBatch || !selectedSubject || !attendanceDate) {
+      toast.error("Please select batch, subject, and date");
       return;
     }
 
-    const fetchAttendance = async () => {
-      setLoadingAttendance(true);
-      try {
-        const res = await axiosInstance.get('/teacher/attendance/filter', {
-          params: {
-            teacher_id: teacherData.id,
-            admin_id: teacherData.admin_id,
-            batch_id: selectedBatch,
-            date: currentDate,
-          },
-        });
+    setLoadingStudents(true);
+    setStudents([]);
 
-        const savedAttendance = res.data.data;
-
-        const attendanceMap = {};
-        savedAttendance.forEach(record => {
-          attendanceMap[record.student_id] = record.status;
-        });
-
-        const initialAttendance = {};
-        students.forEach(student => {
-          initialAttendance[student.id] = attendanceMap[student.id] || 'present';
-        });
-
-        setAttendanceData(initialAttendance);
-      } catch (error) {
-        console.error('Error fetching attendance:', error);
-      }
-      setLoadingAttendance(false);
-    };
-
-    fetchAttendance();
-  }, [teacherData, selectedBatch, currentDate, students]);
-
-  // Handle status change
-  const handleAttendanceChange = (studentId, status) => {
-    setAttendanceData(prev => ({
-      ...prev,
-      [studentId]: status,
-    }));
+    axiosInstance
+      .post(`/teacher/subject/details`, {
+        admin_id: teacherData.admin_id,
+        teacher_id: teacherData.id,
+        subject_id: selectedSubject,
+        batch_id: selectedBatch,
+      })
+      .then((res) => {
+        if (res.data.success) {
+          const studentsWithStatus = res.data.data.map((st) => ({
+            ...st,
+            status: "present",
+          }));
+          setStudents(studentsWithStatus);
+        } else {
+          toast.error("No students found");
+        }
+      })
+      .catch((err) => {
+        toast.error("Error fetching student details");
+        console.error(err);
+      })
+      .finally(() => setLoadingStudents(false));
   };
 
-  // Save or update attendance for one student
-  const saveOrUpdateAttendance = async (studentId) => {
+  // Handle status change for students
+  const handleStatusChange = (index, value) => {
+    const updated = [...students];
+    updated[index].status = value;
+    setStudents(updated);
+  };
+
+  // Handle attendance submission
+  const handleAction = (row) => {
     const payload = {
-      student_id: studentId,
+      teacher_name: teacherData.name,
+      subject_name: subjects.find((s) => s.id == selectedSubject)?.subject || "",
+      subject_id: selectedSubject,
+      batch_name: batches.find((b) => b.id == selectedBatch)?.name || "",
       batch_id: selectedBatch,
+      date: attendanceDate,
+      student_name: row.student_name,
+      student_enrollment_number: row.enrollment_number,
+      status: row.status,
       teacher_id: teacherData.id,
       admin_id: teacherData.admin_id,
-      date: currentDate,
-      status: attendanceData[studentId],
     };
 
-    try {
-      await axiosInstance.post('/teacher/attendance', payload);
-      toast.success('Attendance saved successfully');
-    } catch (error) {
-      if (error.response && (error.response.status === 409 || error.response.status === 422)) {
-        try {
-          await axiosInstance.put('/teacher/attendance', payload);
-          toast.success('Attendance updated successfully');
-        } catch (updateError) {
-          console.error('Error updating attendance:', updateError.response || updateError.message);
-          toast.error('Failed to update attendance');
+    axiosInstance
+      .post("/teacher/attendance", payload)
+      .then((res) => {
+        if (res.data.success) {
+          toast.success("Attendance saved!");
+          setReloadAttendance((prev) => prev + 1);
         }
-      } else {
-        console.error('Error saving attendance:', error.response || error.message);
-        toast.error('Failed to save attendance');
-      }
-    }
+      })
+      .catch((err) => {
+        toast.error("Error saving attendance");
+        console.error(err);
+      });
   };
-
-  // Attendance summary stats
-  const getAttendanceStats = () => {
-    const total = Object.keys(attendanceData).length;
-    const present = Object.values(attendanceData).filter(status => status === 'present').length;
-    const absent = total - present;
-    return { total, present, absent };
-  };
-
-  const stats = getAttendanceStats();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mark Attendance</h1>
-          <p className="text-gray-600">Select a batch and mark attendance for students</p>
-        </div>
+    <div className="container mx-auto p-4 sm:p-6 bg-gray-50 min-h-screen">
+      <Toaster position="top-right" />
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
+        Take Attendance
+      </h1>
 
-        {/* Batch and Date selectors */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Batch</label>
+      {/* Batch Dropdown */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Select Batch
+        </label>
+        <select
+          className="w-full sm:w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+          value={selectedBatch}
+          onChange={(e) => setSelectedBatch(e.target.value)}
+        >
+          <option value="">-- Choose a Batch --</option>
+          {batches.map((batch) => (
+            <option key={batch.id} value={batch.id}>
+              {batch.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Subject Dropdown */}
+      {selectedBatch && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Select Subject
+          </label>
+          {loadingSubjects ? (
+            <div className="flex items-center space-x-2">
+              <svg
+                className="animate-spin h-5 w-5 text-blue-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+              <p className="text-gray-500">Loading subjects...</p>
+            </div>
+          ) : subjects.length > 0 ? (
             <select
-              className="w-full border border-gray-300 rounded-md px-3 py-2"
-              value={selectedBatch}
-              onChange={(e) => setSelectedBatch(e.target.value)}
+              className="w-full sm:w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
             >
-              <option value="">-- Select Batch --</option>
-              {batches.map(batch => (
-                <option key={batch.id} value={batch.id}>{batch.name} (ID: {batch.id})</option>
+              <option value="">-- Choose a Subject --</option>
+              {subjects.map((subj) => (
+                <option key={subj.id} value={subj.id}>
+                  {subj.subject}
+                </option>
               ))}
             </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-            <input
-              type="date"
-              className="w-full border border-gray-300 rounded-md px-3 py-2"
-              value={currentDate}
-              onChange={(e) => setCurrentDate(e.target.value)}
-            />
-          </div>
+          ) : (
+            <p className="text-red-500 text-sm">
+              No subjects found for this batch
+            </p>
+          )}
         </div>
+      )}
 
-        {/* Attendance summary */}
-        {selectedBatch && students.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-              <div className="text-sm text-blue-800">Total Students</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{stats.present}</div>
-              <div className="text-sm text-green-800">Present</div>
-            </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
-              <div className="text-sm text-red-800">Absent</div>
-            </div>
+      {/* Date Picker */}
+      {selectedBatch && selectedSubject && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Select Date
+          </label>
+          <input
+            type="date"
+            className="w-full sm:w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            value={attendanceDate}
+            onChange={(e) => setAttendanceDate(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* Submit Button */}
+      {selectedBatch && selectedSubject && (
+        <button
+          onClick={handleSubmit}
+          className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition disabled:bg-blue-400"
+          disabled={loadingStudents}
+        >
+          {loadingStudents ? (
+            <span className="flex items-center">
+              <svg
+                className="animate-spin h-5 w-5 mr-2 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+              Loading...
+            </span>
+          ) : (
+            "Load Students"
+          )}
+        </button>
+      )}
+
+      {/* Students Table */}
+      <div className="mt-8">
+        {loadingStudents ? (
+          <div className="flex items-center space-x-2">
+            <svg
+              className="animate-spin h-5 w-5 text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              ></path>
+            </svg>
+            <p className="text-gray-500">Loading students...</p>
           </div>
-        )}
-
-        {/* Students attendance table */}
-        {!loadingStudents && !loadingAttendance && students.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Students List</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 table-auto">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                      Student Details
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                      Contact Info
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-4 py-2 text-center text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      Attendance
-                    </th>
+        ) : students.length > 0 ? (
+          <div className="overflow-x-auto bg-white rounded-lg shadow">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Teacher
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Subject
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Batch
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Student
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Enrollment
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {students.map((st, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {teacherData.name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {subjects.find((s) => s.id == selectedSubject)?.subject}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {batches.find((b) => b.id == selectedBatch)?.name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {attendanceDate}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {st.student_name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {st.enrollment_number}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      <div className="flex space-x-4">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name={`status-${index}`}
+                            checked={st.status === "present"}
+                            onChange={() => handleStatusChange(index, "present")}
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          <span>Present</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name={`status-${index}`}
+                            checked={st.status === "absent"}
+                            onChange={() => handleStatusChange(index, "absent")}
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          <span>Absent</span>
+                        </label>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <button
+                        onClick={() => handleAction(st)}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+                      >
+                        Log
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {students.map(student => (
-                    <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 max-w-xs break-words whitespace-normal">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{student.name}</div>
-                          <div className="text-sm text-gray-500">EN: {student.enrollment_number}</div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 max-w-xs break-words whitespace-normal">
-                        <div>
-                          <div className="text-sm text-gray-900">{student.email}</div>
-                          <div className="text-sm text-gray-500">{student.contact_number || 'N/A'}</div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            student.status.toLowerCase() === 'active'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {student.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        <div className="flex flex-wrap items-center gap-2 justify-center min-w-[200px]">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name={`attendance-${student.id}`}
-                              value="present"
-                              checked={attendanceData[student.id] === 'present'}
-                              onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
-                              className="form-radio h-4 w-4 text-green-600 focus:ring-green-500"
-                            />
-                            <span className="ml-2 text-sm text-green-700 font-medium">Present</span>
-                          </label>
-
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name={`attendance-${student.id}`}
-                              value="absent"
-                              checked={attendanceData[student.id] === 'absent'}
-                              onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
-                              className="form-radio h-4 w-4 text-red-600 focus:ring-red-500"
-                            />
-                            <span className="ml-2 text-sm text-red-700 font-medium">Absent</span>
-                          </label>
-
-                          <button
-                            type="button"
-                            onClick={() => saveOrUpdateAttendance(student.id)}
-                            className="ml-0 sm:ml-4 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition whitespace-nowrap"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-
-        {/* Loading */}
-        {(loadingStudents || loadingAttendance) && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-            <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-gray-300 rounded w-1/4 mx-auto"></div>
-              <div className="h-4 bg-gray-300 rounded w-1/2 mx-auto"></div>
-            </div>
-            <p className="mt-4 text-gray-600">Loading data...</p>
-          </div>
-        )}
-
-        {/* No students found */}
-        {!loadingStudents && students.length === 0 && selectedBatch && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center text-gray-600">
-            No students found for this batch.
-          </div>
+        ) : (
+          selectedBatch &&
+          selectedSubject &&
+          !loadingStudents && (
+            <p className="text-red-500 text-sm">No students found</p>
+          )
         )}
       </div>
+
+      {/* Live Attendance Checker */}
+      {selectedBatch && selectedSubject && (
+        <CheckAttendance
+          teacher_id={teacherData.id}
+          batch_id={selectedBatch}
+          subject_id={selectedSubject}
+          date={attendanceDate}
+          reload={reloadAttendance}
+        />
+      )}
     </div>
   );
 }

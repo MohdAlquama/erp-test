@@ -1,46 +1,40 @@
-"use client";
+
+
 import { createContext, useContext, useState, useEffect } from "react";
 import { usePage, router } from "@inertiajs/react";
-import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
 
 const StudentContext = createContext();
 
 export const StudentProvider = ({ children }) => {
-  const inertiaStudent = usePage().props.student; // from backend
+  const { student: inertiaStudent } = usePage().props || {}; // guard
   const [student, setStudent] = useState(inertiaStudent || null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!inertiaStudent);
 
-  // Sync when inertia props change
   useEffect(() => {
-    setStudent(inertiaStudent || null);
-  }, [inertiaStudent]);
-
-  // Fetch latest details if we have an ID
-  useEffect(() => {
-    if (student?.id) {
-      setLoading(true);
-      axios
-        .get(`/student/${student.id}/details`) // Laravel route for student details
-        .then((res) => {
-          setStudent(res.data);
-        })
-        .catch((err) => {
-          console.error("Failed to fetch student details", err);
-          // Optional: redirect if unauthorized
-          if (err.response?.status === 401) {
-            router.visit("/student/login");
-          }
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
+    if (!inertiaStudent?.id) {
       setLoading(false);
+      return;
     }
-  }, [student?.id]);
+
+    const fetchStudentDetails = async () => {
+      setLoading(true);
+      try {
+        const res = await axiosInstance.get(`/student/${inertiaStudent.id}/details`);
+        setStudent(res.data);
+      } catch (err) {
+        console.error("Failed to fetch student details", err);
+        if (err.response?.status === 401) router.visit("/student/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudentDetails();
+  }, [inertiaStudent?.id]);
 
   return (
-    <StudentContext.Provider value={{ student, setStudent, loading }}>
+    <StudentContext.Provider value={{ student: student || {}, setStudent, loading }}>
       {children}
     </StudentContext.Provider>
   );

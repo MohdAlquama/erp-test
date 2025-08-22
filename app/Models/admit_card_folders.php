@@ -10,6 +10,8 @@ class admit_card_folders extends Model
         'admin_id',
         'folder_name',
         'description',
+        'year',
+        'exam_type_id'
     ];
 
      public function admin()

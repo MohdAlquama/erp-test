@@ -53,7 +53,11 @@ class StudentController extends Controller
             'enrollment_number' => $student->enrollment_number,
             'contact_number' => $student->contact_number,
             'batch_ids' => $student->batch_ids,
-          
+            'session'=>$student->session,
+            'father_name'=>$student->father_name,
+            'profile_image'=>$student->profile_image,
+            'gender'=>$student->gender,
+            'dob'=>$student->dob,
             'admin_id' => $student->admin_id,
             'status' => $student->status,
             'created_at' => $student->created_at->toDateString(),
@@ -91,7 +95,7 @@ class StudentController extends Controller
             'enrollment_number' => 'required|string|unique:students,enrollment_number',
             'contact_number' => 'nullable|string|max:20',
             'status' => 'required|in:Active,Inactive',
-            'batch_ids' => 'nullable|array',
+            'batch_ids' => 'nullable|',
             'profile_image' => 'nullable|image|max:2048',
         ]);
 
@@ -126,7 +130,7 @@ class StudentController extends Controller
             'enrollment_number' => 'required|string|unique:students,enrollment_number,' . $student->id,
             'contact_number' => 'nullable|string|max:20',
             'status' => 'required|in:Active,Inactive',
-            'batch_ids' => 'nullable|array',
+            'batch_ids' => 'nullable|',
             'profile_image' => 'nullable|image|max:2048',
         ]);
 

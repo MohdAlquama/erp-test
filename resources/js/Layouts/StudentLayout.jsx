@@ -1,23 +1,29 @@
-import Header from "@/components/studentHeaderSidebar/header";
-import Sidebar from "@/components/studentHeaderSidebar/sidebar";
-import { StudentProvider } from "@/contexts/StudentContext";
-import React, { useState } from "react";
+'use client';
+import React, { useState } from 'react';
+import { StudentProvider } from '@/contexts/StudentContext';
+import StudentSidebar from '@/components/studentHeaderSidebar/Sidebar';
+import StudentHeader from '@/components/studentHeaderSidebar/Header';
 
-export default function StudentLayout({ children }) {
+export default function StudentLayout({ children, student }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
     <StudentProvider>
       <div className="flex min-h-screen bg-gray-100">
-        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        {/* Overlay for mobile */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+            onClick={closeSidebar}
+          />
+        )}
 
-        <div className="flex flex-col flex-1">
-          <Header toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
-          <main className="flex-1 p-4 sm:p-6 overflow-y-auto">{children}</main>
+        <StudentSidebar isOpen={isSidebarOpen} closeSidebar={closeSidebar} />
+        <div className="flex-1 flex flex-col lg:ml-64">
+          <StudentHeader toggleSidebar={toggleSidebar} student={student} />
+          <main className="mt-20 p-6">{children}</main>
         </div>
       </div>
     </StudentProvider>

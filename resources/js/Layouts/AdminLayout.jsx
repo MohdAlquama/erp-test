@@ -110,7 +110,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       color: 'blue',
     },
     {
-      label: 'Users',
+      label: 'Subject add',
       href: '/admin/subjects',
       icon: Users,
       color: 'green',
@@ -143,7 +143,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       href: '/admin/admin-card',
       icon: Settings,
       color: 'purple',
+    }, {
+      label: 'Admit Layout Controller',
+      href: '/admin/admit-card-info-add',
+      icon: Settings,
+      color: 'purple',
     }
+    
   ];
 
   return (

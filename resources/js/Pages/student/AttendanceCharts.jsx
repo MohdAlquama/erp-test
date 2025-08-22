@@ -1,140 +1,151 @@
-import React, { useEffect, useState } from "react";
-import { Line, PolarArea } from "react-chartjs-2";
+"use client";
+
+import { useEffect, useState } from "react";
 import axiosInstance from "@/utils/axiosInstance";
+import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ArcElement,
+  Title,
   Tooltip,
   Legend,
-  RadialLinearScale,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  ArcElement,
 } from "chart.js";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ArcElement,
-  Tooltip,
-  Legend,
-  RadialLinearScale
-);
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement);
 
-export default function AttendanceCharts({ student_id, admin_id }) {
+export default function AttendanceCharts() {
   const [attendance, setAttendance] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // current month
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // current year
 
   useEffect(() => {
-    if (!student_id || !admin_id) return;
     axiosInstance
-      .get(`/student/attendance/get/${student_id}/${admin_id}`)
-      .then((res) => {
-        setAttendance(res.data.data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [student_id, admin_id]);
+      .get("/student/get-attendance")
+      .then((res) => setAttendance(res.data))
+      .catch((err) => console.error(err));
+  }, []);
 
-  if (loading) {
+  // Filter attendance by selected month/year
+  const filtered = attendance.filter((r) => {
+    const d = new Date(r.date);
     return (
-      <div className="flex items-center justify-center p-6 bg-white/90 rounded-2xl shadow-lg">
-        <div className="text-lg font-medium text-gray-600">Loading attendance charts...</div>
-      </div>
+      d.getMonth() + 1 === selectedMonth &&
+      d.getFullYear() === selectedYear
     );
-  }
-
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const presentCountByMonth = new Array(12).fill(0);
-  const absentCountByMonth = new Array(12).fill(0);
-
-  attendance.forEach(({ date, status }) => {
-    const d = new Date(date);
-    const monthIndex = d.getMonth();
-    if (status === "present") presentCountByMonth[monthIndex]++;
-    else if (status === "absent") absentCountByMonth[monthIndex]++;
   });
 
-  const lineChartData = {
-    labels: months,
+  // Group by subject and status
+  const summary = filtered.reduce((acc, record) => {
+    const subject = record.subject_name;
+    const status = record.status;
+    if (!acc[subject]) {
+      acc[subject] = { present: 0, absent: 0 };
+    }
+    acc[subject][status] += 1;
+    return acc;
+  }, {});
+
+  const subjects = Object.keys(summary);
+  const presentCounts = subjects.map((s) => summary[s].present);
+  const absentCounts = subjects.map((s) => summary[s].absent);
+
+  // Chart.js datasets
+  const barData = {
+    labels: subjects,
     datasets: [
       {
         label: "Present",
-        data: presentCountByMonth,
-        borderColor: "rgba(34, 197, 94, 0.8)",
-        backgroundColor: "rgba(34, 197, 94, 0.2)",
-        tension: 0.4,
-        fill: true,
+        data: presentCounts,
+        backgroundColor: "rgba(75, 192, 192, 0.7)",
       },
       {
         label: "Absent",
-        data: absentCountByMonth,
-        borderColor: "rgba(239, 68, 68, 0.8)",
-        backgroundColor: "rgba(239, 68, 68, 0.2)",
-        tension: 0.4,
-        fill: true,
+        data: absentCounts,
+        backgroundColor: "rgba(255, 99, 132, 0.7)",
       },
     ],
   };
 
-  const totalPresent = presentCountByMonth.reduce((a, b) => a + b, 0);
-  const totalAbsent = absentCountByMonth.reduce((a, b) => a + b, 0);
-
-  const polarData = {
+  const pieData = {
     labels: ["Present", "Absent"],
     datasets: [
       {
-        data: [totalPresent, totalAbsent],
-        backgroundColor: ["rgba(34, 197, 94, 0.7)", "rgba(239, 68, 68, 0.7)"],
-        borderWidth: 1,
+        data: [
+          presentCounts.reduce((a, b) => a + b, 0),
+          absentCounts.reduce((a, b) => a + b, 0),
+        ],
+        backgroundColor: [
+          "rgba(75, 192, 192, 0.7)",
+          "rgba(255, 99, 132, 0.7)",
+        ],
       },
     ],
   };
 
+  // Dropdowns for Month/Year
+  const months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+
+  const years = [...new Set(attendance.map((r) => new Date(r.date).getFullYear()))];
+
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-6 sm:p-8 border border-white/20">
-      <h2 className="text-xl sm:text-2xl font-semibold mb-6 text-gray-900">Attendance Overview</h2>
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="lg:w-4/5">
-          <h3 className="text-lg font-medium mb-4 text-gray-700">Monthly Attendance Trend</h3>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <Line
-              data={lineChartData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { position: "top" },
-                  tooltip: { mode: "index", intersect: false },
-                },
-                scales: {
-                  y: { beginAtZero: true, title: { display: true, text: "Days" } },
-                  x: { title: { display: true, text: "Month" } },
-                },
-              }}
-              height={300}
-            />
-          </div>
+    <div className="p-6 space-y-6 overflow-hidden">
+      {/* Filters */}
+      <div className="flex gap-4">
+        <select
+          className="border p-2 rounded"
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(Number(e.target.value))}
+        >
+          {months.map((m, idx) => (
+            <option key={idx} value={idx + 1}>
+              {m}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="border p-2 rounded"
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+        >
+          {years.length > 0
+            ? years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))
+            : <option>{new Date().getFullYear()}</option>}
+        </select>
+      </div>
+
+      {/* Charts */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-lg font-bold mb-2">
+            Subject-wise Attendance ({months[selectedMonth - 1]} {selectedYear})
+          </h2>
+          {subjects.length > 0 ? (
+            <Bar data={barData} />
+          ) : (
+            <p className="text-gray-500">No data for this month/year</p>
+          )}
         </div>
-        <div className="lg:w-1/5">
-          <h3 className="text-lg font-medium mb-4 text-gray-700">Yearly Summary</h3>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <PolarArea
-              data={polarData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { position: "bottom" },
-                  tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw} days` } },
-                },
-              }}
-              height={300}
-            />
-          </div>
+
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-lg font-bold mb-2">
+            Overall Attendance ({months[selectedMonth - 1]} {selectedYear})
+          </h2>
+          {(presentCounts.length > 0 || absentCounts.length > 0) ? (
+            <Pie data={pieData} />
+          ) : (
+            <p className="text-gray-500">No data for this month/year</p>
+          )}
         </div>
       </div>
     </div>

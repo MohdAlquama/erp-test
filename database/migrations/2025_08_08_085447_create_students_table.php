@@ -25,7 +25,7 @@ return new class extends Migration {
             $table->string('contact_number')->nullable();
             $table->enum('status', ['Active', 'Inactive'])->default('Active');
 
-            $table->json('batch_ids')->nullable(); // Store batch IDs as JSON array
+            $table->unsignedBigInteger('batch_ids')->nullable(); // Store batch IDs as Single Integer
             $table->string('gender')->nullable(); // or after appropriate column
             $table->date('dob')->nullable();
             $table->string('profile_image')->nullable();

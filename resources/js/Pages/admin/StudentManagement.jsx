@@ -32,7 +32,7 @@ const [formData, setFormData] = useState({
   contact_number: '',
   password: '',
   status: 'Active',
-  batch_ids: [],
+  batch_ids: '',
   subject_ids: [],
   teacher_ids: [],
   dob: '',       // Add DOB (string, format YYYY-MM-DD)
@@ -137,10 +137,13 @@ const handleSubmit = async () => {
       formDataToSend.append('father_name', formData.father_name || '');
       formDataToSend.append('dob', formData.dob || '');
       formDataToSend.append('gender', formData.gender || '');
-      (formData.batch_ids || []).forEach((id) => {
-        formDataToSend.append('batch_ids[]', id);
-      });
+            formDataToSend.append('batch_ids',formData.batch_ids || '');
+
+      // (formData.batch_ids || []).forEach((id) => {
+      //   formDataToSend.append('batch_ids[]', id);
+      // });
      
+      
       if (!editingStudent && formData.password) {
         formDataToSend.append('password', formData.password);
       }
@@ -181,7 +184,11 @@ const handleSubmit = async () => {
 
 
 const handleEdit = (student) => {
+
     setEditingStudent(student);
+    const batchId = student.batch_id && batches.find((b) => b.id === student.batch_id)
+      ? student.batch_id.toString()
+      : '';
     setFormData({
       profile_image:student.profile_image,
       name: student.name || '',
@@ -194,13 +201,18 @@ const handleEdit = (student) => {
       gender: student.gender || '',
       password: '',
       status: student.status || 'Active',
-      batch_ids: (student.batch_ids || []).map((id) => id.toString()),
+      batch_ids: batchId,
      
     });
     setProfileImage(null);
     setDrawerOpen(true);
   };
 
+
+  
+
+  
+  
 
 
 const handleDelete = async (studentId, enrollmentNumber) => {
@@ -347,15 +359,21 @@ const handleDelete = async (studentId, enrollmentNumber) => {
                 <td className="px-6 py-4">{s.email}</td>
                 <td className="px-6 py-4">{s.enrollment_number}</td>
                 <td className="px-6 py-4">{s.contact_number || '-'}</td>
-                <td className="px-6 py-4 space-x-1">
-                  {s.batch_ids?.map((id, i) => {
+                <td className="px-6 py-4 space-x-1">    {(() => {
+    const batch = batches.find((b) => b.id === s.batch_ids);
+    return batch ? batch.name : "Unknown";
+  })()}
+
+
+
+                  {/* {s.batch_ids?.map((id, i) => {
                     const batch = batches.find((b) => b.id === parseInt(id));
                     return (
                       <span key={i} className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
                         {batch?.name || id}
                       </span>
                     );
-                  })}
+                  })} */}
                 </td>
                 {/* <td className="px-6 py-4 space-x-1">
                   {s.subject_ids?.map((id, i) => {
@@ -595,14 +613,3 @@ export default StudentManagementDashboard;
 StudentManagementDashboard.layout = (page) => (
   <AdminLayout>{page}</AdminLayout>
 );
-
-
-
-
-
-
-
-
-
-
-

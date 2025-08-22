@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use App\Models\batch_folder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 class BatchFolderController extends Controller
 {
     //
@@ -74,4 +76,84 @@ public function destroy(Request $request, $id)
             'batches' => $batches,
         ]);
     }
+public function getIenertiaParamShowOfSubject($id, $folder_id, $adminId)
+{
+    $Batch_id = base64_decode($id);
+    $admitCardFolderId = base64_decode($folder_id);
+
+    $data = DB::table('admit_card_folders as f')
+        ->join('batch_folders as bf', 'f.id', '=', 'bf.folder_id')
+        ->join('batches as b', 'bf.batch_id', '=', 'b.id')
+        ->join('batch_subject_teacher as bst', 'b.id', '=', 'bst.batch_id')
+        ->join('subjects as s', 'bst.subject_id', '=', 's.id')
+        ->join('teachers as t', 'bst.teacher_id', '=', 't.id')
+         ->leftJoin('students as st', 'st.batch_ids', '=', 'b.id') // ✅ simple equality
+
+        ->where('f.id', $admitCardFolderId)
+        ->where('b.id', $Batch_id)
+        ->where('bf.admin_id', $adminId)
+        ->where('b.created_by', $adminId)
+        ->where('bst.admin_id', $adminId)
+        ->where('s.created_by', $adminId)
+        ->where('t.admin_id', $adminId)
+        ->select(
+            's.id as subject_id',
+            's.subject as subject_name',
+            'b.id as batch_id',
+            'b.name as batch_name',
+            't.id as teacher_id',
+            't.name as teacher_name',
+            'st.id as student_id',
+            'st.enrollment_number as enrollment_number',
+            'st.name as student_name',
+            'f.id as folder_id'  // ✅ only folder ID
+        )
+        ->get();
+
+    return Inertia::render('admin/admitCard/AdmitCard', [
+        'message' => 'admit_card_folders fetched successfully',
+        'admit_card_folders_data' => $data,
+        'folderId' =>$admitCardFolderId,
+        'batchId'=>$Batch_id
+    ]);
+}
+
+
+
+
+// public function getIenertiaParamShowOfSubject($id,$folder_id,$adminId){
+//     $Batch_id = base64_decode($id);
+//     $admitCardFolderId=base64_decode($folder_id); //f.id
+       
+// $data = DB::table('admit_card_folders as f')
+//     ->join('batch_folders as bf', 'f.id', '=', 'bf.folder_id')
+//     ->join('batches as b', 'bf.batch_id', '=', 'b.id')
+//     ->join('batch_subject_teacher as bst', 'b.id', '=', 'bst.batch_id')
+//     ->join('subjects as s', 'bst.subject_id', '=', 's.id')
+//     ->join('teachers as t', 'bst.teacher_id', '=', 't.id')
+    
+//     ->where('f.id', $admitCardFolderId)
+//     ->where('b.id', $Batch_id)
+//     ->where('bf.admin_id', $adminId)
+//     ->where('b.created_by', $adminId)
+//     ->where('bst.admin_id', $adminId)
+//     ->where('s.created_by', $adminId)
+//     ->where('t.admin_id', $adminId)
+//     ->select(
+//         's.id as subject_id',
+//         's.subject as subject_name',
+//         'b.id as batch_id',
+//         'b.name as batch_name',
+//         't.id as teacher_id',
+//         't.name as teacher_name',
+//         'st.id as student_id',
+//         'st.name as student_name'
+//     )
+//     ->get();
+
+//     return Inertia::render('admin/admitCard/AdmitCard',[
+//            'message' => 'admit_card_folders fetched successfully',
+//             'admit_card_folders_data' => $data,
+//     ]);
+// }
 }

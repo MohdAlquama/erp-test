@@ -15,4 +15,15 @@ class StudentDashboardController extends Controller
             
         ]);
     }
+
+     public function logout(Request $request)
+    {
+        // Clear student session
+        $request->session()->forget('student');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        // Redirect to student login page
+        return redirect()->route('student.login');
+    }
 }

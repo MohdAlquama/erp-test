@@ -17,7 +17,7 @@ export default function ControlRoom() {
 
   useEffect(() => {
     async function fetchRooms() {
-      try {
+     try {
         if (!admin?.id) return;
         setLoading(true);
         const response = await axiosInstance.get(`/admin/${admin.id}/class-rooms`);

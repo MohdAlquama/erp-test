@@ -5,6 +5,7 @@ import { useBaseContext } from "@/contexts/adminContext";
 import axiosInstance from "@/utils/axiosInstance";
 import toast from "react-hot-toast";
 import Loader from "@/components/Loader";
+import { router } from "@inertiajs/react";
 
 export default function CreatedBatch({ folder }) {
   const { admin } = useBaseContext();
@@ -113,7 +114,10 @@ export default function CreatedBatch({ folder }) {
   };
 
   const Viewbatch =(batch_id)=>{
-    
+    const batch_idencodedId = btoa(batch_id.toString());
+        const folderIdencodedId = btoa(folder.id.toString());
+
+    router.visit(`/admin/getIenertiaParamShowOfSubject/${batch_idencodedId}/${folderIdencodedId}/${admin.id}`)
   }
   return (
     <div className="p-6 bg-white dark:bg-gray-900 min-h-screen text-gray-900 dark:text-white relative">

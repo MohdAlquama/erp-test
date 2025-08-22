@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminCardController;
 use App\Http\Controllers\Admin\Admit\AdmitCardFolderController;
+use App\Http\Controllers\Admin\Admit\AdmitCardIssuesController;
 use App\Http\Controllers\Admin\Admit\BatchFolderController;
 use App\Http\Controllers\Admin\AdmitCardController;
 use App\Http\Controllers\Admin\BatchesController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Admin\HelperController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TeacherController;
 
+use App\Http\Controllers\Student\StudentAdmitCardController;
 use App\Http\Controllers\Student\StudentAttendanceController;
 use App\Http\Controllers\Student\StudentCourseController;
 use App\Http\Controllers\Student\StudentDashboardController;
@@ -18,6 +20,7 @@ use App\Http\Controllers\Student\StudentGradeController;
 use App\Http\Controllers\Student\StudentNotificationController;
 use App\Http\Controllers\Student\StudentProfileController;
 use App\Http\Controllers\Teacher\AddentanceController;
+use App\Http\Controllers\Teacher\TeacherBatchController;
 use App\Models\Admin;
 use App\Models\Teachers;
 use GuzzleHttp\Middleware;
@@ -132,14 +135,14 @@ Route::get('/csrf-token', function () {
 });
 
 Route::prefix('admin')->middleware(['newrole:CollegeAdmin'])->group(function () {
-Route::get('/{adminId}/batch/{batchId}/teachers', [BatchViewController::class, 'index']);
-Route::post('/{admin_id}/batch/{batch_id}/assign-subject', [BatchViewController::class, 'assignSubject']);
-Route::get('/{adminId}/batch/{batchId}/assignments', [BatchViewController::class, 'getAssignments']);   
-Route::delete('/{adminId}/batch/{batchId}/assignments/{assignmentId}', [BatchViewController::class, 'deleteAssignment']);
-Route::put('/{adminId}/batch/{batchId}/assignments/{assignmentId}', [BatchViewController::class, 'editAssignment']);
-Route::delete('/{adminId}/batch/{batchId}/teachers/{teacherId}', [BatchViewController::class, 'removeTeacherFromBatch']);
+    Route::get('/{adminId}/batch/{batchId}/teachers', [BatchViewController::class, 'index']);
+    Route::post('/{admin_id}/batch/{batch_id}/assign-subject', [BatchViewController::class, 'assignSubject']);
+    Route::get('/{adminId}/batch/{batchId}/assignments', [BatchViewController::class, 'getAssignments']);
+    Route::delete('/{adminId}/batch/{batchId}/assignments/{assignmentId}', [BatchViewController::class, 'deleteAssignment']);
+    Route::put('/{adminId}/batch/{batchId}/assignments/{assignmentId}', [BatchViewController::class, 'editAssignment']);
+    Route::delete('/{adminId}/batch/{batchId}/teachers/{teacherId}', [BatchViewController::class, 'removeTeacherFromBatch']);
 
-// Admin Dashboard Page
+    // Admin Dashboard Page
     Route::get('/t', function (Request $request) {
         $admin = $request->session()->get('admin');
 
@@ -272,60 +275,43 @@ Route::delete('/{adminId}/batch/{batchId}/teachers/{teacherId}', [BatchViewContr
 
     //new admit desgin router 
     //admit card folder
-        Route::get('/{id}/admit-card-folders', [AdmitCardFolderController::class, 'indexs']);
-    Route::get('/admit-card-folder',[AdmitCardFolderController::class,'index']);
-        Route::post('/{adminId}/admit-card-folder', [AdmitCardFolderController::class, 'store']);
-            Route::put('/{adminId}/admit-card-folder/{id}', [AdmitCardFolderController::class, 'update']);
+    Route::get('/{id}/admit-card-folders', [AdmitCardFolderController::class, 'indexs']);
+    Route::get('/admit-card-folder', [AdmitCardFolderController::class, 'index']);
+    Route::post('/{adminId}/admit-card-folder', [AdmitCardFolderController::class, 'store']);
+    Route::put('/{adminId}/admit-card-folder/{id}', [AdmitCardFolderController::class, 'update']);
     Route::delete('/{adminId}/admit-card-folder/{id}', [AdmitCardFolderController::class, 'destroy']);
     Route::get('/admit-card-folder/{id}', [AdmitCardFolderController::class, 'getIenertiaParamShow'])
-     ->name('admin.admit-card-folder.getIenertiaParamShow');
-Route::get('/{id}/AdminGetBatch', [BatchesController::class, 'AdminGetBatch']);
+        ->name('admin.admit-card-folder.getIenertiaParamShow');
+    Route::get('/{id}/AdminGetBatch', [BatchesController::class, 'AdminGetBatch']);
     Route::post('/save-batch-folder', [BatchFolderController::class, 'store']);
     Route::get('/admin-folder-data', [BatchFolderController::class, 'getAdminFolderData']);
-Route::delete('/delete-batch-folder/{id}', [BatchFolderController::class, 'destroy']);
-Route::post('/get-batches-by-ids', [BatchFolderController::class, 'getBatchesByIds']);
+    Route::delete('/delete-batch-folder/{id}', [BatchFolderController::class, 'destroy']);
+    Route::post('/get-batches-by-ids', [BatchFolderController::class, 'getBatchesByIds']);
+    //subject desgin by admit cart
+    Route::get('/getIenertiaParamShowOfSubject/{id}/{folder_id}/{admin_id}', [BatchFolderController::class, 'getIenertiaParamShowOfSubject']);
+    // admit card sumbit them
+    Route::post('/{admin}/admit-card/submit', [AdmitCardIssuesController::class, 'store']);
+    Route::get('/{admin_id}/admit-cards/{folder_id}/{batch_id}', [AdmitCardIssuesController::class, 'getData']);
 });
 
 
 
 // Student routes
 Route::prefix('student')->middleware('student.session')->group(function () {
-    Route::get('{id}/teachers', function ($adminId) {
-        $teachers = Teachers::where('admin_id', $adminId)->get();
-
-        return response()->json([
-            'teachers' => $teachers
-        ]);
-    })->name('admin.teachers.index');
-    Route::get('dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard.index');
-    Route::get('/{adminId}/admin-cards/student/{studentId}', [AdminCardController::class, 'getActiveStudentData']);
-    Route::get('/admit-card/{adminId}', [AdmitCardController::class, 'indexs']);
-    Route::get('/{id}/batches', [BatchesController::class, 'index']);
-
-    Route::get('/{adminId}/class-rooms', [ClassRoomController::class, 'getRoomsByAdmin'])->name('classroom.getByAdmin');
-    Route::get('{id}/subjects', [SubjectController::class, 'get'])->name('admin.subjects.get');
-
-    Route::get('courses', [StudentCourseController::class, 'index'])->name('student.courses.index');
-
-    Route::get('grades', [StudentGradeController::class, 'index'])->name('student.grades.index');
-
-    Route::get('attendance', [StudentAttendanceController::class, 'index'])->name('student.attendance.index');
-
-    Route::get('profile', [StudentProfileController::class, 'index'])->name('student.profile.index');
-
-    Route::get('notifications', [StudentNotificationController::class, 'index'])->name('student.notifications.index');
-    Route::get('/admit-card-detail', [AdmitCardController::class, 'getStudent']);
-    // this will get amit card data 
-    Route::get('/{adminId}/admin-cards/student/{studentId}', [AdminCardController::class, 'getActiveStudentData']);
-    Route::get('/attendance/get/{student_id}/{admin_id}', action: [AddentanceController::class, 'getByStudentOrAdmin']);
-
-
+    //logout
+    Route::post('/student/logout', [StudentDashboardController::class, 'logout'])->name('student.logout');
+    Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard.index');
+    Route::get('/mycourses', [StudentCourseController::class, 'index']);
+    Route::get('MyCourses/{batch_id}/{admin_id}', [StudentCourseController::class, 'MyCourses']);
+    Route::get('/admitCard', [StudentAdmitCardController::class, 'index']);
+    Route::get('/admit-card-folders', [StudentAdmitCardController::class, 'getFolders']);
+    Route::get('/admit-card', [StudentAdmitCardController::class, 'show']);
+    Route::get('/layout/{id}/{admin_id}', [StudentAdmitCardController::class, 'layout']);
+    //Attendance routes
+    Route::get('/get-attendance/{student_EndrollmentNumber}/{admin_id}', [StudentAttendanceController::class, 'getAttendance']);
 });
 
-Route::get('/student/{id}/details', [
-    StudentController::class,
-    'details'
-])->name('student.details');
+
 
 
 
@@ -349,6 +335,25 @@ Route::prefix('teacher')->middleware(['teacher'])->group(function () {
     Route::get('/attendance/filter', [AddentanceController::class, 'getAttendanceByFilters']);
     Route::put('/attendance', [AddentanceController::class, 'update']);
     Route::get('/attendance/all/{teacher_id}/{admin_id}', action: [AddentanceController::class, 'getByTeacherOrAdmin']);
+    // new router will desgin them 
+    Route::get('/admin/{adminId}/batches', [TeacherBatchController::class, 'getBatchesByAdmin']);
+    /**
+     * Get subjects assigned to a teacher in a specific batch.
+     */
+    Route::post('/subjects', [TeacherBatchController::class, 'getSubjects']);
 
+     /**
+     * Get teacher's related subject, batch, and students
+     */
+    Route::post('/subject/details', [TeacherBatchController::class, 'getTeacherSubjectDetails']);
+    /** it sumit them attendance */
+    Route::post('/attendance', [AddentanceController::class, 'SaveAttendance']); // save single row
+    Route::post('/attendance/check', [AddentanceController::class, 'checkAttendance']);
+
+    /**
+     * Display a list of attendances filtered by admin, teacher, and batch creator.
+     */
+
+    Route::get('/attendances/{adminId}/{teacherId}', [AddentanceController::class, 'indexing']);
 });
 
