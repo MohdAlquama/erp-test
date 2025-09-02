@@ -23,6 +23,7 @@
         "vite": "^6.2.4"
     },
     "dependencies": {
+        "@amcharts/amcharts5": "^5.13.5",
         "chart.js": "^4.5.0",
         "html2pdf.js": "^0.10.3",
         "lucide-react": "^0.525.0",

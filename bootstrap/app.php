@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'student.session' => \App\Http\Middleware\StudentSessionAuth::class,
             'teacher' => \App\Http\Middleware\TeacherAuth::class,
         ]);
-
+ 
         // ✅ Register web middleware
         $middleware->web(
             append: [

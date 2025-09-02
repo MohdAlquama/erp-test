@@ -80,4 +80,14 @@ public function show($id)
         ]);
     }
 
+    public function StudentGetBatch($adminId , $id)
+    {
+        // Example: Fetch only batches created by this admin
+        $batches = Batch::where('created_by', $adminId)->where('id',$id)->get();
+
+        return response()->json([
+            'batches' => $batches
+        ]);
+    }
+
 }

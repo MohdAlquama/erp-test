@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { Link, usePage, useForm } from '@inertiajs/react';
-import { LayoutDashboard, BookOpen, CalendarCheck, User, LogOut, FileSearch } from 'lucide-react';
+import { LayoutDashboard, BookOpen, CalendarCheck, User, LogOut, FileSearch ,Send,Route} from 'lucide-react';
 
 export default function StudentSidebar({ isOpen, closeSidebar }) {
   const { url } = usePage();
@@ -12,7 +12,9 @@ export default function StudentSidebar({ isOpen, closeSidebar }) {
     { icon: BookOpen, label: 'My Courses', href: '/student/mycourses' },
     { icon: CalendarCheck, label: 'Attendance', href: '/student/attendance' },
     { icon: FileSearch, label: 'Admit Card', href: '/student/admitCard' },
-    { icon: User, label: 'Profile', href: '/student/profile' },
+    { icon: Send , label: 'My Result', href: '/student/my-result' },
+    { icon: Route, label: 'Syllabus', href: '/student/syllabus' },
+    { icon: User, label: 'Icard', href: '/student/icard' }
   ];
 
   const handleLogout = () => {

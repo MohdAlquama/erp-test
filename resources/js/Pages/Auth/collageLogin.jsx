@@ -10,11 +10,10 @@ export default function CollageLogin() {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
-    const submit = (e) => {
+    const submit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setErrors({});
-
         axiosInstance.post('/admin', data)
   .then(res => {
     const user = res.data.detail;

@@ -42,4 +42,38 @@ class SubjectController extends Controller
         return response()->json($subjects);
 
     }
+
+    public function update(Request $request, $id)
+{
+    $request->validate([
+        'subject' => 'required|string|max:255',
+        'admin_id' => 'required|integer',
+    ]);
+
+    $subject = Subject::where('id', $id)
+        ->where('created_by', $request->admin_id) // ✅ ensure only owner can edit
+        ->firstOrFail();
+
+    $subject->update([
+        'subject' => $request->subject,
+    ]);
+
+    return response()->json(['success' => true, 'message' => 'Subject updated successfully!']);
+}
+
+public function destroy(Request $request, $id)
+{
+    $request->validate([
+        'admin_id' => 'required|integer',
+    ]);
+
+    $subject = Subject::where('id', $id)
+        ->where('created_by', $request->admin_id) // ✅ ensure only owner can delete
+        ->firstOrFail();
+
+    $subject->delete();
+
+    return response()->json(['success' => true, 'message' => 'Subject deleted successfully!']);
+}
+
 }

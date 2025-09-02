@@ -16,14 +16,14 @@ import {
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement);
 
-export default function AttendanceCharts() {
+export default function AttendanceCharts({student_EndrollmentNumber, admin_id}) {
   const [attendance, setAttendance] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // current month
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // current year
 
   useEffect(() => {
     axiosInstance
-      .get("/student/get-attendance")
+      .get(`/student/get-attendance/${student_EndrollmentNumber}/${admin_id}`)
       .then((res) => setAttendance(res.data))
       .catch((err) => console.error(err));
   }, []);

@@ -579,7 +579,10 @@ export default function AdmitCardFolder() {
 
   return (
     <div className="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen">
+      {/* <marquee>This text will scroll from right to left</marquee> */}
+
       <div className="flex justify-between items-center mb-6">
+        
         <h1 className="text-2xl font-bold">Admit Card Folders</h1>
         <button
           onClick={() => {
@@ -616,7 +619,7 @@ export default function AdmitCardFolder() {
                 <th className="px-4 py-2">Folder Name</th>
                 <th className="px-4 py-2">Description</th>
                 <th className="px-4 py-2">Exam Year</th>
-                <th className="px-4 py-2">Exam Type</th>
+                <th className="px-4 py-2">Admit card Desgin</th>
                 <th className="px-4 py-2">Actions</th>
               </tr>
             </thead>
@@ -733,13 +736,13 @@ export default function AdmitCardFolder() {
 
           {/* Exam Type Dropdown */}
           <div>
-            <label className="block text-sm font-medium mb-1">Exam Type</label>
+            <label className="block text-sm font-medium mb-1">Admit Card Desgin</label>
             <select
               value={selectedExamType}
               onChange={(e) => setSelectedExamType(e.target.value)}
               className="border rounded p-2 w-full dark:bg-gray-800 dark:text-white"
             >
-              <option value="">Select Exam Type</option>
+              <option value="">Select Desgin</option>
               {admitCarLayout.map((admitDesign, index) => (
                 <option key={index} value={admitDesign.id}>
                   {admitDesign.exam_type}

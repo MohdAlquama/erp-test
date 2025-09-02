@@ -4,12 +4,14 @@ use App\Http\Controllers\Admin\AdminCardController;
 use App\Http\Controllers\Admin\Admit\AdmitCardFolderController;
 use App\Http\Controllers\Admin\Admit\AdmitCardIssuesController;
 use App\Http\Controllers\Admin\Admit\BatchFolderController;
+use App\Http\Controllers\Admin\Admit\ResultController;
 use App\Http\Controllers\Admin\AdmitCardController;
 use App\Http\Controllers\Admin\BatchesController;
 use App\Http\Controllers\Admin\BatchViewController;
 use App\Http\Controllers\Admin\ClassRoomController;
 use App\Http\Controllers\Admin\HelperController;
 use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\Syllbus\SyllbusController;
 use App\Http\Controllers\Admin\TeacherController;
 
 use App\Http\Controllers\Student\StudentAdmitCardController;
@@ -19,6 +21,8 @@ use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Student\StudentGradeController;
 use App\Http\Controllers\Student\StudentNotificationController;
 use App\Http\Controllers\Student\StudentProfileController;
+use App\Http\Controllers\Student\StudentResultController;
+use App\Http\Controllers\Student\StudentSyllbusController;
 use App\Http\Controllers\Teacher\AddentanceController;
 use App\Http\Controllers\Teacher\TeacherBatchController;
 use App\Models\Admin;
@@ -146,7 +150,7 @@ Route::prefix('admin')->middleware(['newrole:CollegeAdmin'])->group(function () 
     Route::get('/t', function (Request $request) {
         $admin = $request->session()->get('admin');
 
-        return Inertia::render('t', [
+        return Inertia::render('admin/AdminDashboard', [
             'admin' => $admin
         ]);
     });
@@ -154,6 +158,9 @@ Route::prefix('admin')->middleware(['newrole:CollegeAdmin'])->group(function () 
     Route::get('/subjects', [SubjectController::class, 'index'])->name('admin.subjects.index');
     Route::post('/subjects', [SubjectController::class, 'store'])->name('admin.subjects.store');
     Route::get('{id}/subjects', [SubjectController::class, 'get'])->name('admin.subjects.get');
+
+    Route::put('/subjects/{id}', [SubjectController::class, 'update'])->name('admin.subjects.update');
+    Route::delete('/subjects/{id}', [SubjectController::class, 'destroy'])->name('admin.subjects.destroy');
     // Permissions Route for Admin by ID
     Route::get('/{id}/permissions', function ($id) {
         $admin = Admin::findOrFail($id);
@@ -251,7 +258,7 @@ Route::prefix('admin')->middleware(['newrole:CollegeAdmin'])->group(function () 
     })->name('admin.students.index');
 
     Route::post('/student', [StudentController::class, 'store']);
-    Route::delete('/admin/{adminId}/students/{studentId}', [StudentController::class, 'destroy']);
+    Route::delete('/{adminId}/students/{studentId}', [StudentController::class, 'destroy']);
 
     Route::put('/students/{student}', [StudentController::class, 'update']);
     Route::get('/{adminId}/students', [StudentController::class, 'getByAdmin']);
@@ -292,6 +299,48 @@ Route::prefix('admin')->middleware(['newrole:CollegeAdmin'])->group(function () 
     // admit card sumbit them
     Route::post('/{admin}/admit-card/submit', [AdmitCardIssuesController::class, 'store']);
     Route::get('/{admin_id}/admit-cards/{folder_id}/{batch_id}', [AdmitCardIssuesController::class, 'getData']);
+    Route::delete('/{admin_id}/admit-card/{id}', [AdmitCardIssuesController::class, 'destroy']);
+    //result
+Route::post('/{admin_id}/results', [ResultController::class, 'store']);
+Route::get('/{admin_id}/results/{folder_id}/{batch_id}', [ResultController::class, 'index']);
+Route::delete('/results/{adminId}/{enrollment}', [ResultController::class, 'destroy']);
+Route::put('/results/approve', [ResultController::class, 'approveAll']);
+//syllbus
+
+Route::get('/syllbus',[SyllbusController::class,'index']);
+Route::get('/{adminId}/syllabus',[SyllbusController::class,'show']);
+Route::post('/{adminId}/syllabus', [SyllbusController::class, 'store']);
+    Route::post('/{adminId}/syllabus/{id}', [SyllbusController::class, 'update']); // or PUT
+Route::delete('/{adminId}/syllabus/{id}', [SyllbusController::class, 'destroy']);
+//permissions
+Route::get('/permissions', [\App\Http\Controllers\Admin\AdminPermissionsController::class, 'index'])->name('admin.permissions.index');
+
+//dashboard
+Route::get('/{adminId}/active-teachers-count', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'FindTeacherActive'])->name('admin.dashboard');
+Route::get('/{adminId}/inactive-teachers-count', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'FindTeacherInactive'])->name('admin.dashboard.inactive');
+Route::get('/{adminId}/total-teachers-count', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'FindTeacherTotal'])->name('admin.dashboard.total');
+Route::get('/{adminId}/total-students-count', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'FindStudentTotal'])->name('admin.dashboard.studenttotal');
+Route::get('/{adminId}/active-students-count', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'FindStudentActive'])->name('admin.dashboard.studentactive');
+Route::get('/{adminId}/inactive-students-count', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'FindStudentInactive'])->name('admin.dashboard.studentinactive');
+Route::get('/{adminId}/totalBatch', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'GetTotalBatches'])->name('admin.dashboard.batches');
+Route::get('/{adminId}/totalClassRooms', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'GetTotalClassRooms'])->name('admin.dashboard.classrooms');
+Route::get('/{adminId}/totalAtmitCard', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'GetTotalAmitCardDesgin'])->name('admin.dashboard.totalAtmitCard');
+Route::get('/{adminId}/totalPresentToday', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'presentToday'])->name('admin.dashboard.presentToday');
+Route::get('/{adminId}/totalAbsentToday', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'absentToday'])->name('admin.dashboard.absentToday');
+/** not use them */    Route::get('/{adminId}/today', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'today']);
+    Route::get('/{adminId}/monthly', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'monthly']);
+    Route::get('/{adminId}/yearly', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'yearly']);
+    Route::get('/{adminId}/attendance', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'getAdminAttendance']);
+    Route::get('/attendance-chart', [\App\Http\Controllers\Admin\Dashbooard\AdminDashbordController::class, 'AttendaceInertia']);
+    //college
+        Route::get('/college', [\App\Http\Controllers\Admin\College\AdminCollegeController::class, 'index']);
+
+    // API endpoints
+    Route::get('{adminId}/colleges', [\App\Http\Controllers\Admin\College\AdminCollegeController::class, 'list']); // fetch colleges by admin
+    Route::post('colleges', [\App\Http\Controllers\Admin\College\AdminCollegeController::class, 'store']);
+    Route::put('colleges/{id}', [\App\Http\Controllers\Admin\College\AdminCollegeController::class, 'update']);
+    Route::delete('colleges/{id}', [\App\Http\Controllers\Admin\College\AdminCollegeController::class, 'destroy']);
+
 });
 
 
@@ -309,6 +358,19 @@ Route::prefix('student')->middleware('student.session')->group(function () {
     Route::get('/layout/{id}/{admin_id}', [StudentAdmitCardController::class, 'layout']);
     //Attendance routes
     Route::get('/get-attendance/{student_EndrollmentNumber}/{admin_id}', [StudentAttendanceController::class, 'getAttendance']);
+    Route::get('/attendance', [StudentAttendanceController::class, 'index']);
+    //result
+    Route::get('/my-result', [StudentResultController::class, 'index']);
+    Route::get('/result/{adminId}/{folderName}/{batchId}/{enrollmentNumber}', [StudentResultController::class, 'getStudentResults']);
+    //syllbus
+    Route::get('/syllabus',[StudentSyllbusController::class,'index']);
+    Route::get('/syllabus/{adminId}/{batchId}',[StudentSyllbusController::class,'show']);
+    //Icard
+    Route::get('/icard', [\App\Http\Controllers\Student\StudentIcardController::class, 'index']);
+        Route::get('{adminId}/colleges', [\App\Http\Controllers\Admin\College\AdminCollegeController::class, 'list']); // fetch colleges by admin
+        //batch
+        Route::get('{adminId}/batches/{id}', [BatchesController::class, 'StudentGetBatch']);
+
 });
 
 

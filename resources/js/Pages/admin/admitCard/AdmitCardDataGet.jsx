@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "@/utils/axiosInstance";
 
-function AdmitCardDataGet({ folder_id, admin_id ,batch_id }) {
+function AdmitCardDataGet({ folder_id, admin_id, batch_id , refreshKey }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch Data
   useEffect(() => {
     if (!folder_id || !admin_id) return;
 
@@ -22,7 +23,19 @@ function AdmitCardDataGet({ folder_id, admin_id ,batch_id }) {
     };
 
     fetchData();
-  }, [folder_id, admin_id]);
+  }, [folder_id, admin_id, batch_id , refreshKey]);
+
+  // 🗑️ Delete Row
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this record?")) return;
+
+    try {
+await axiosInstance.delete(`/admin/${admin_id}/admit-card/${id}`);      // Remove deleted row from UI
+      setData((prev) => prev.filter((row) => row.id !== id));
+    } catch (err) {
+      console.error("Error deleting record:", err);
+    }
+  };
 
   if (loading) return <p>Loading...</p>;
   if (!data.length) return <p>No data available</p>;
@@ -40,6 +53,7 @@ function AdmitCardDataGet({ folder_id, admin_id ,batch_id }) {
             <th className="border px-4 py-2">Venue</th>
             <th className="border px-4 py-2">Date</th>
             <th className="border px-4 py-2">Time</th>
+            <th className="border px-4 py-2">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -53,6 +67,14 @@ function AdmitCardDataGet({ folder_id, admin_id ,batch_id }) {
               <td className="border px-4 py-2">{row.exam_venue}</td>
               <td className="border px-4 py-2">{row.exam_date}</td>
               <td className="border px-4 py-2">{row.exam_time}</td>
+              <td className="border px-4 py-2 text-center">
+                <button
+                  onClick={() => handleDelete(row.id)}
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                >
+                  🗑 Delete
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
