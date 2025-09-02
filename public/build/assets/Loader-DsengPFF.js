@@ -1,1 +1,0 @@
-import{j as e}from"./app-Da_nhggM.js";import{L as a}from"./loader-circle-BW8mmFDU.js";function i({message:r="Loading..."}){return e.jsxs("div",{className:"flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300",children:[e.jsx(a,{className:"w-6 h-6 animate-spin"}),e.jsx("span",{children:r})]})}export{i as L};

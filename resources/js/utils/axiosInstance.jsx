@@ -111,13 +111,8 @@ const axiosInstance = axios.create({
     },
 });
 
-// Automatically fetch CSRF cookie before any state-changing request
-axiosInstance.interceptors.request.use(async (config) => {
-    const method = config.method?.toUpperCase();
-    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-        await axiosInstance.get("/sanctum/csrf-cookie");
-    }
-    return config;
-});
+export const getCsrfCookie = async () => {
+  await axiosInstance.get("/sanctum/csrf-cookie");
+};
 
 export default axiosInstance;

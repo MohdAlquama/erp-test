@@ -1,6 +1,6 @@
 
 
-import axiosInstance from '@/utils/axiosInstance';
+import axiosInstance, { getCsrfCookie } from '@/utils/axiosInstance';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -14,6 +14,7 @@ export default function CollageLogin() {
         e.preventDefault();
         setLoading(true);
         setErrors({});
+        await getCsrfCookie()
         axiosInstance.post('/admin', data)
   .then(res => {
     const user = res.data.detail;
