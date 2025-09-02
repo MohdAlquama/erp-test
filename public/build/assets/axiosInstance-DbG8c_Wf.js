@@ -1,0 +1,1 @@
+import{a as t}from"./app-DVKDYkXn.js";const e=t.create({baseURL:"https://setbizsolution.com",withCredentials:!0,headers:{"Content-Type":"application/json",Accept:"application/json","X-Requested-With":"XMLHttpRequest"}}),a=async()=>{await e.get("/sanctum/csrf-cookie")};export{e as a,a as g};
